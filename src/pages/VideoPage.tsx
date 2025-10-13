@@ -191,7 +191,7 @@ Please let me know how to proceed with payment.`;
     const encoded = encodeURIComponent(message);
     if (telegramUsername) {
       const base = `https://t.me/${telegramUsername.replace('@', '')}`;
-      window.open(`${base}?start=0&text=${encoded}`, '_blank');
+      window.open(`${base}?text=${encoded}`, '_blank');
     } else {
       window.open(`https://t.me/share/url?text=${encoded}`, '_blank');
     }
