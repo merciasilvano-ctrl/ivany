@@ -159,14 +159,14 @@ const VideoCard: FC<VideoCardProps> = ({ video }) => {
       return `${Math.ceil(diffDays / 30)} months ago`;
     };
     
-    const msg = `🎬 *${video.title}*
+    const msg = `🎬 **${video.title}**
 
-💰 *Price:* $${video.price.toFixed(2)}
-⏱️ *Duration:* ${formatDuration(video.duration)}
-👀 *Views:* ${formatViews(video.views)}
-📅 *Added:* ${formatAddedDate(new Date(video.createdAt || video.created_at || Date.now()))}
+💰 **Price:** $${video.price.toFixed(2)}
+⏱️ **Duration:** ${formatDuration(video.duration)}
+👀 **Views:** ${formatViews(video.views)}
+📅 **Added:** ${formatAddedDate(new Date(video.createdAt || video.created_at || Date.now()))}
 
-📝 *Description:*
+📝 **Description:**
 ${video.description || 'No description available'}
 
 Please let me know how to proceed with payment.`;

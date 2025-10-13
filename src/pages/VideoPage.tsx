@@ -12,6 +12,7 @@ import Divider from '@mui/material/Divider';
 import Card from '@mui/material/Card';
 import CardMedia from '@mui/material/CardMedia';
 import Grid from '@mui/material/Grid';
+import Skeleton from '@mui/material/Skeleton';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCart';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -21,6 +22,49 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { useAuth } from '../services/Auth';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { VideoService, Video } from '../services/VideoService';
+
+// Skeleton component for video page loading state
+const VideoPageSkeleton: FC = () => {
+  return (
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Skeleton variant="rectangular" width={120} height={40} sx={{ mb: 3, borderRadius: 1 }} />
+      
+      <Paper elevation={3} sx={{ p: 3 }}>
+        <Skeleton variant="text" sx={{ fontSize: '2rem', mb: 2, width: '60%' }} />
+        
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <Skeleton 
+              variant="rectangular" 
+              sx={{ width: '100%', height: 300, borderRadius: 1 }} 
+            />
+          </Grid>
+          
+          <Grid item xs={12} md={6}>
+            <Skeleton variant="text" sx={{ fontSize: '1.5rem', mb: 2, width: '40%' }} />
+            <Skeleton variant="text" sx={{ fontSize: '1rem', mb: 1 }} />
+            <Skeleton variant="text" sx={{ fontSize: '1rem', mb: 1, width: '80%' }} />
+            <Skeleton variant="text" sx={{ fontSize: '1rem', mb: 2, width: '60%' }} />
+            
+            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+              <Skeleton variant="rectangular" width={80} height={24} />
+              <Skeleton variant="rectangular" width={80} height={24} />
+            </Box>
+            
+            <Divider sx={{ my: 2 }} />
+            
+            <Skeleton variant="text" sx={{ fontSize: '1.5rem', mb: 2, width: '30%' }} />
+            
+            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+              <Skeleton variant="rectangular" width={120} height={40} />
+              <Skeleton variant="rectangular" width={120} height={40} />
+            </Box>
+          </Grid>
+        </Grid>
+      </Paper>
+    </Container>
+  );
+};
 
 const VideoPage: FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -132,14 +176,14 @@ const VideoPage: FC = () => {
       return `${Math.ceil(diffDays / 30)} months ago`;
     };
     
-    const message = `🎬 *${video.title}*
+    const message = `🎬 **${video.title}**
 
-💰 *Price:* $${video.price.toFixed(2)}
-⏱️ *Duration:* ${formatDuration(video.duration)}
-👀 *Views:* ${formatViews(video.views)}
-📅 *Added:* ${formatAddedDate(new Date(video.createdAt || Date.now()))}
+💰 **Price:** $${video.price.toFixed(2)}
+⏱️ **Duration:** ${formatDuration(video.duration)}
+👀 **Views:** ${formatViews(video.views)}
+📅 **Added:** ${formatAddedDate(new Date(video.createdAt || Date.now()))}
 
-📝 *Description:*
+📝 **Description:**
 ${video.description || 'No description available'}
 
 Please let me know how to proceed with payment.`;
@@ -198,13 +242,7 @@ Please let me know how to proceed with payment.`;
   };
 
   if (loading) {
-    return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-          <CircularProgress size={60} />
-        </Box>
-      </Container>
-    );
+    return <VideoPageSkeleton />;
   }
 
   if (error) {
