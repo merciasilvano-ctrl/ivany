@@ -161,46 +161,6 @@ const VideoPage: FC = () => {
     }
   };
 
-  const handleTelegramRedirect = () => {
-    if (!video) return;
-    
-    // Format date for "Added" field
-    const formatAddedDate = (date: Date) => {
-      const now = new Date();
-      const diffTime = Math.abs(now.getTime() - date.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      if (diffDays === 1) return '1 day ago';
-      if (diffDays < 7) return `${diffDays} days ago`;
-      if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
-      return `${Math.ceil(diffDays / 30)} months ago`;
-    };
-    
-    const message = `🎬 **${video.title}**
-
-💰 **Price:** $${video.price.toFixed(2)}
-⏱️ **Duration:** ${formatDuration(video.duration)}
-👀 **Views:** ${formatViews(video.views)}
-📅 **Added:** ${formatAddedDate(new Date(video.createdAt || Date.now()))}
-
-📝 **Description:**
-${video.description || 'No description available'}
-
-Please let me know how to proceed with payment.`;
-    
-    const encoded = encodeURIComponent(message);
-    if (telegramUsername) {
-      const base = `https://t.me/${telegramUsername.replace('@', '')}`;
-      window.open(`${base}?text=${encoded}`, '_blank');
-    } else {
-      window.open(`https://t.me/share/url?text=${encoded}`, '_blank');
-    }
-  };
-
-  const handleBack = () => {
-    navigate('/');
-  };
-
   // Format the duration nicely
   const formatDuration = (duration?: string | number) => {
     if (duration === undefined || duration === null) return '00:00';
@@ -239,6 +199,47 @@ Please let me know how to proceed with payment.`;
     if (views < 1000) return `${views} views`;
     if (views < 1000000) return `${(views / 1000).toFixed(1)}K views`;
     return `${(views / 1000000).toFixed(1)}M views`;
+  };
+
+  // Create Telegram href for the button
+  const telegramHref = (() => {
+    if (!video) return 'https://t.me/share/url';
+    
+    // Format date for "Added" field
+    const formatAddedDate = (date: Date) => {
+      const now = new Date();
+      const diffTime = Math.abs(now.getTime() - date.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 1) return '1 day ago';
+      if (diffDays < 7) return `${diffDays} days ago`;
+      if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
+      return `${Math.ceil(diffDays / 30)} months ago`;
+    };
+    
+    const message = `🎬 **${video.title}**
+
+💰 **Price:** $${video.price.toFixed(2)}
+⏱️ **Duration:** ${formatDuration(video.duration)}
+👀 **Views:** ${formatViews(video.views)}
+📅 **Added:** ${formatAddedDate(new Date(video.createdAt || Date.now()))}
+
+📝 **Description:**
+${video.description || 'No description available'}
+
+Please let me know how to proceed with payment.`;
+    
+    const encoded = encodeURIComponent(message);
+    if (telegramUsername) {
+      const base = `https://t.me/${telegramUsername.replace('@', '')}`;
+      return `${base}?text=${encoded}`;
+    } else {
+      return `https://t.me/share/url?text=${encoded}`;
+    }
+  })();
+
+  const handleBack = () => {
+    navigate('/');
   };
 
   if (loading) {
@@ -383,7 +384,9 @@ Please let me know how to proceed with payment.`;
                     color="primary"
                     fullWidth
                     startIcon={<TelegramIcon />}
-                    onClick={handleTelegramRedirect}
+                    href={telegramHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
                     Contact on Telegram
                   </Button>

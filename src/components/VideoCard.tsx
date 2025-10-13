@@ -177,6 +177,38 @@ Please let me know how to proceed with payment.`;
     window.open(url, '_blank');
   };
 
+  // Create Telegram href for the button
+  const telegramHref = (() => {
+    if (!telegramUsername) return 'https://t.me/share/url';
+    
+    // Format date for "Added" field
+    const formatAddedDate = (date: Date) => {
+      const now = new Date();
+      const diffTime = Math.abs(now.getTime() - date.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 1) return '1 day ago';
+      if (diffDays < 7) return `${diffDays} days ago`;
+      if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
+      return `${Math.ceil(diffDays / 30)} months ago`;
+    };
+    
+    const msg = `🎬 **${video.title}**
+
+💰 **Price:** $${video.price.toFixed(2)}
+⏱️ **Duration:** ${formatDuration(video.duration)}
+👀 **Views:** ${formatViews(video.views)}
+📅 **Added:** ${formatAddedDate(new Date(video.createdAt || video.created_at || Date.now()))}
+
+📝 **Description:**
+${video.description || 'No description available'}
+
+Please let me know how to proceed with payment.`;
+    
+    const encoded = encodeURIComponent(msg);
+    return `https://t.me/${telegramUsername.replace('@', '')}?text=${encoded}`;
+  })();
+
   const handleStripePay = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!stripePublishableKey) return;
@@ -494,7 +526,9 @@ Please let me know how to proceed with payment.`;
             variant="contained"
             fullWidth
             startIcon={<TelegramIcon />}
-            onClick={handleTelegramClick}
+            href={telegramHref}
+            target="_blank"
+            rel="noopener noreferrer"
             sx={{
               backgroundColor: '#8e24aa',
               color: 'white',
