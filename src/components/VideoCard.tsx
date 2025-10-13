@@ -419,10 +419,9 @@ Please let me know how to proceed with payment.`;
           />
         )}
         
-        {/* Price badge - Enhanced visibility */}
+        {/* Price badge - Pink/Red style */}
         <Chip 
           label={`$${video.price.toFixed(2)}`} 
-          color="primary" 
           size="medium" 
           sx={{ 
             position: 'absolute', 
@@ -431,18 +430,12 @@ Please let me know how to proceed with payment.`;
             fontWeight: 'bold',
             fontSize: '0.9rem',
             height: '32px',
-            boxShadow: '0 4px 12px rgba(142, 36, 170, 0.4)',
-            backgroundColor: '#8e24aa',
+            backgroundColor: '#FF0F50',
             border: '2px solid rgba(255, 255, 255, 0.3)',
             '& .MuiChip-label': {
               color: 'white',
               fontWeight: 'bold',
               px: 1.5
-            },
-            '&:hover': {
-              backgroundColor: '#6a1b9a',
-              transform: 'scale(1.05)',
-              transition: 'all 0.2s ease'
             }
           }}
         />
@@ -466,7 +459,7 @@ Please let me know how to proceed with payment.`;
         </Typography>
         
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: '#8e24aa' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: '#ccc' }}>
             <VisibilityIcon sx={{ fontSize: 16 }} />
             <Typography variant="caption">
               {formatViews(video.views)}
@@ -474,34 +467,10 @@ Please let me know how to proceed with payment.`;
           </Box>
           
           {createdAtField && (
-            <Typography variant="caption" sx={{ color: '#8e24aa' }}>
+            <Typography variant="caption" sx={{ color: '#ccc' }}>
               {formatDate(createdAtField)}
             </Typography>
           )}
-        </Box>
-
-        {/* Price display at bottom */}
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center',
-          mt: 1,
-          p: 1,
-          backgroundColor: 'rgba(142, 36, 170, 0.1)',
-          borderRadius: 1,
-          border: '1px solid rgba(142, 36, 170, 0.2)'
-        }}>
-          <Typography 
-            variant="h6" 
-            sx={{ 
-              color: '#8e24aa',
-              fontWeight: 'bold',
-              fontSize: '1.1rem',
-              textAlign: 'center'
-            }}
-          >
-            ${video.price.toFixed(2)}
-          </Typography>
         </Box>
 
         {/* Actions: Preview and Telegram */}
@@ -522,48 +491,40 @@ Please let me know how to proceed with payment.`;
             Preview
           </Button>
           <Button
-            variant="outlined"
+            variant="contained"
             fullWidth
             startIcon={<TelegramIcon />}
             onClick={handleTelegramClick}
             sx={{
-              borderColor: '#8e24aa',
-              color: '#8e24aa',
+              backgroundColor: '#8e24aa',
+              color: 'white',
+              fontWeight: 'bold',
               '&:hover': {
-                borderColor: '#6a1b9a',
-                backgroundColor: 'rgba(142, 36, 170, 0.1)',
+                backgroundColor: '#6a1b9a',
               }
             }}
           >
             Telegram
           </Button>
+          <Button
+            variant="contained"
+            fullWidth
+            startIcon={<CreditCardIcon />}
+            onClick={handleStripePay}
+            disabled={isStripeLoading}
+            sx={{
+              backgroundColor: '#8e24aa',
+              color: 'white',
+              fontWeight: 'bold',
+              '&:hover': {
+                backgroundColor: '#6a1b9a',
+              }
+            }}
+          >
+            Pay
+          </Button>
         </Box>
 
-        {/* Stripe Pay button */}
-        {stripePublishableKey && (
-          <Box sx={{ mt: 1 }}>
-            <Button
-              variant="contained"
-              fullWidth
-              startIcon={<CreditCardIcon />}
-              onClick={handleStripePay}
-              disabled={isStripeLoading}
-              sx={{
-                backgroundColor: '#6a1b9a',
-                color: 'white',
-                '&:hover': {
-                  backgroundColor: '#4a148c',
-                },
-                '&:disabled': {
-                  backgroundColor: '#4a148c',
-                  opacity: 0.6,
-                }
-              }}
-            >
-              {isStripeLoading ? 'Processing...' : 'Pay'}
-            </Button>
-          </Box>
-        )}
       </CardContent>
       </Card>
     </>
