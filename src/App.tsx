@@ -22,13 +22,13 @@ import PaymentNotifications from './components/PaymentNotifications';
 import PrivacyNotice from './components/PrivacyNotice';
 import ScrollToTop from './components/ScrollToTop';
 import CustomAnalytics from './components/CustomAnalytics';
-import LoadingModal from './components/LoadingModal';
+import AgeVerificationModal from './components/AgeVerificationModal';
 
 // Componente AppContent para usar hooks que dependem do Router
 const AppContent: FC = () => {
   const { siteName, loading } = useSiteConfig();
   const [showSplash, setShowSplash] = useState(false);
-  const [showLoadingModal, setShowLoadingModal] = useState(true);
+  const [showAgeVerification, setShowAgeVerification] = useState(true);
   const location = useLocation();
   const enableSplash = false; // feature-flag: disable splash without removing code
   
@@ -79,16 +79,16 @@ const AppContent: FC = () => {
     setShowSplash(false);
   };
 
-  // Função para fechar o modal de loading
-  const handleLoadingModalClose = () => {
-    setShowLoadingModal(false);
+  // Função para confirmar idade
+  const handleAgeConfirm = () => {
+    setShowAgeVerification(false);
   };
 
-  // Controlar quando mostrar o modal de loading
-  useEffect(() => {
-    // Sempre mostrar o modal no início e deixar o timer de 25s do próprio modal controlar o fechamento
-    setShowLoadingModal(true);
-  }, []);
+  // Função para rejeitar acesso
+  const handleAgeReject = () => {
+    // Redirecionar para uma página de bloqueio ou fechar o site
+    window.location.href = 'https://www.google.com';
+  };
   
   return (
     <Box sx={{ 
@@ -96,7 +96,7 @@ const AppContent: FC = () => {
       flexDirection: 'column',
       minHeight: '100vh',
     }}>
-      <LoadingModal open={showLoadingModal} onClose={handleLoadingModalClose} />
+      <AgeVerificationModal open={showAgeVerification} onConfirm={handleAgeConfirm} onReject={handleAgeReject} />
       {enableSplash && showSplash && <SplashAnimation onAnimationComplete={handleAnimationComplete} />}
       <PrivacyNotice />
       <PaymentNotifications />

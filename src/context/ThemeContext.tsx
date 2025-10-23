@@ -51,10 +51,10 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     palette: {
       mode,
       primary: {
-        main: '#8e24aa', // Purple for adult content
+        main: '#d32f2f', // Red for adult content
       },
       secondary: {
-        main: '#6a1b9a', // Darker purple accent
+        main: '#b71c1c', // Darker red accent
       },
       background: {
         default: mode === 'dark' ? '#000000' : '#000000', // Pure black background
@@ -62,7 +62,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       },
       text: {
         primary: mode === 'dark' ? '#FFFFFF' : '#FFFFFF',
-        secondary: mode === 'dark' ? '#8e24aa' : '#8e24aa', // Purple for secondary text
+        secondary: mode === 'dark' ? '#d32f2f' : '#d32f2f', // Red for secondary text
       },
       error: {
         main: '#FF0000', // Pure red for errors
@@ -98,9 +98,9 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
             transition: 'all 0.3s ease',
           },
           containedPrimary: {
-            backgroundColor: '#8e24aa',
+            backgroundColor: '#d32f2f',
             '&:hover': {
-              backgroundColor: '#6a1b9a',
+              backgroundColor: '#b71c1c',
               transform: 'scale(1.03)',
             },
           },
@@ -131,7 +131,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         styleOverrides: {
           root: {
             '&:hover': {
-              backgroundColor: 'rgba(142, 36, 170, 0.1)',
+              backgroundColor: 'rgba(211, 47, 47, 0.1)',
             }
           }
         }

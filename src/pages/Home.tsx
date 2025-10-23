@@ -155,7 +155,7 @@ const Home: FC = () => {
         const successMessage = `🎉 **Payment Successful!** 🎉
 
 ✅ **Transaction ID:** ${sessionId || 'N/A'}
-💰 **Amount:** $85.00
+💰 **Amount:** $135.00
 📦 **Package:** ALL CONTENT INCLUDED
 ⏰ **Time:** ${new Date().toLocaleString()}
 

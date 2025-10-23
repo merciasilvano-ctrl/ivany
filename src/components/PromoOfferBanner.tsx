@@ -22,7 +22,7 @@ const PromoOfferBanner = ({ telegramLink, telegramUsername, prefilledMessage }: 
   const [isStripeLoading, setIsStripeLoading] = useState(false);
   const { stripePublishableKey } = useSiteConfig();
 
-  const interestMessage = prefilledMessage || "Hi! I'm interested in the $135 offer including all content. Could you guide me on how to pay?";
+  const interestMessage = prefilledMessage || "Hi! I'm interested in the $100 offer including all content. Could you guide me on how to pay?";
   const computedTelegramHref = (() => {
     try {
       if (telegramLink) return telegramLink;
@@ -66,7 +66,7 @@ const PromoOfferBanner = ({ telegramLink, telegramUsername, prefilledMessage }: 
       
       // Create checkout session
       const sessionId = await StripeService.createCheckoutSession(
-        135, // $135 price
+        100, // $100 price
         'usd',
         randomProductName,
         successUrl,
@@ -173,7 +173,7 @@ const PromoOfferBanner = ({ telegramLink, telegramUsername, prefilledMessage }: 
             textShadow: '1px 1px 4px rgba(0,0,0,0.3)'
           }}
         >
-          ALL CONTENT FOR ONLY $135
+          ALL CONTENT FOR ONLY $100
         </Typography>
 
         <Typography sx={{ textAlign: 'center', opacity: 0.95, mb: 2.5, fontSize: '0.95rem' }}>

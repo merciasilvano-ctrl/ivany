@@ -97,7 +97,7 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({ open, onCon
                 letterSpacing: '0.05em',
               }}
             >
-              🔞 VERIFICAÇÃO DE IDADE 🔞
+              🔞 AGE VERIFICATION 🔞
             </Typography>
           </DialogTitle>
 
@@ -121,7 +121,7 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({ open, onCon
                 textShadow: '0 2px 4px rgba(0,0,0,0.7)',
               }}
             >
-              CONTEÚDO ADULTO - APENAS PARA MAIORES DE 18 ANOS
+              ADULT CONTENT - 18+ ONLY
             </Typography>
             <Typography
               variant="body1"
@@ -131,7 +131,7 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({ open, onCon
                 fontSize: isMobile ? '1rem' : '1.1rem',
               }}
             >
-              Este site contém conteúdo exclusivo para adultos. Você deve ter pelo menos 18 anos de idade para acessar este conteúdo.
+              This site contains adult content exclusively. You must be at least 18 years old to access this content.
             </Typography>
           </Box>
 
@@ -159,7 +159,7 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({ open, onCon
                 transition: 'all 0.3s ease',
               }}
             >
-              SIM, TENHO 18+ ANOS
+              YES, I AM 18+ YEARS OLD
             </Button>
             
             <Button
@@ -184,7 +184,7 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({ open, onCon
                 transition: 'all 0.3s ease',
               }}
             >
-              NÃO, SOU MENOR DE IDADE
+              NO, I AM UNDER 18
             </Button>
           </Box>
 
@@ -198,7 +198,7 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({ open, onCon
               fontSize: isMobile ? '0.85rem' : '0.9rem',
             }}
           >
-            ⚠️ Ao confirmar, você declara ter 18 anos ou mais e aceita visualizar conteúdo adulto
+            ⚠️ By confirming, you declare that you are 18 years or older and agree to view adult content
           </Typography>
         </Box>
       </DialogContent>

@@ -261,7 +261,7 @@ Please let me know how to proceed with payment.`;
           '&:hover': {
             transform: 'translateY(-10px) scale(1.02)',
             boxShadow: '0 16px 30px rgba(142,36,170,0.3)',
-            borderColor: '#8e24aa',
+            borderColor: '#d32f2f',
           }
         }}
         onClick={handleCardClick}
@@ -350,7 +350,7 @@ Please let me know how to proceed with payment.`;
               size={40} 
               thickness={4}
               sx={{ 
-                color: '#8e24aa',
+                color: '#d32f2f',
                 mb: 1,
                 animation: 'pulse 1.5s ease-in-out infinite'
               }} 
@@ -407,7 +407,7 @@ Please let me know how to proceed with payment.`;
             position: 'absolute', 
             top: 8, 
             left: 8, 
-            backgroundColor: '#8e24aa',
+            backgroundColor: '#d32f2f',
             color: 'white',
             fontWeight: 'bold',
             fontSize: '0.7rem',
@@ -513,10 +513,10 @@ Please let me know how to proceed with payment.`;
             startIcon={<VisibilityIcon />}
             onClick={handlePreviewClick}
             sx={{
-              backgroundColor: '#8e24aa',
+              backgroundColor: '#d32f2f',
               color: 'white',
               '&:hover': {
-                backgroundColor: '#6a1b9a',
+                backgroundColor: '#b71c1c',
               }
             }}
           >
@@ -530,11 +530,11 @@ Please let me know how to proceed with payment.`;
             target="_blank"
             rel="noopener noreferrer"
             sx={{
-              backgroundColor: '#8e24aa',
+              backgroundColor: '#d32f2f',
               color: 'white',
               fontWeight: 'bold',
               '&:hover': {
-                backgroundColor: '#6a1b9a',
+                backgroundColor: '#b71c1c',
               }
             }}
           >
@@ -547,11 +547,11 @@ Please let me know how to proceed with payment.`;
             onClick={handleStripePay}
             disabled={isStripeLoading}
             sx={{
-              backgroundColor: '#8e24aa',
+              backgroundColor: '#d32f2f',
               color: 'white',
               fontWeight: 'bold',
               '&:hover': {
-                backgroundColor: '#6a1b9a',
+                backgroundColor: '#b71c1c',
               }
             }}
           >

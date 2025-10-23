@@ -81,7 +81,7 @@ const Header: FC = () => {
             sx={{
               display: 'flex',
               alignItems: 'center',
-              background: 'linear-gradient(to right, #8e24aa 0%, #6a1b9a 100%)',
+              background: 'linear-gradient(to right, #d32f2f 0%, #b71c1c 100%)',
               borderRadius: '8px',
               px: 1.5,
               py: 0.5,
@@ -118,7 +118,7 @@ const Header: FC = () => {
             size="small"
             sx={{ 
               ml: 1, 
-              bgcolor: '#8e24aa', 
+              bgcolor: '#d32f2f', 
               color: 'white', 
               fontWeight: 'bold',
               height: '22px',
@@ -160,7 +160,7 @@ const Header: FC = () => {
                     borderColor: 'rgba(142, 36, 170, 0.4)',
                   },
                   '&.Mui-focused fieldset': {
-                    borderColor: '#8e24aa',
+                    borderColor: '#d32f2f',
                     borderWidth: '1px',
                   },
                 },
@@ -281,7 +281,7 @@ const Header: FC = () => {
             onClick={toggleTheme} 
             sx={{ 
               ml: 1,
-              color: '#8e24aa',
+              color: '#d32f2f',
               '&:hover': {
                 bgcolor: 'rgba(142, 36, 170, 0.1)'
               }
