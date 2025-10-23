@@ -29,7 +29,7 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({ open, onCon
     <Dialog
       open={open}
       onClose={() => {}} // Prevent closing by clicking outside
-      maxWidth="md"
+      maxWidth={isMobile ? "sm" : "md"}
       fullWidth
       PaperProps={{
         sx: {
@@ -42,7 +42,7 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({ open, onCon
         },
       }}
     >
-      <DialogContent sx={{ p: 6, textAlign: 'center', position: 'relative' }}>
+      <DialogContent sx={{ p: isMobile ? 3 : 6, textAlign: 'center', position: 'relative' }}>
         {/* Background decoration */}
         <Box
           sx={{
@@ -72,10 +72,10 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({ open, onCon
         {/* Content */}
         <Box sx={{ position: 'relative', zIndex: 1 }}>
           {/* Warning Icon */}
-          <Box sx={{ mb: 4 }}>
+          <Box sx={{ mb: isMobile ? 2 : 4 }}>
             <WarningIcon
               sx={{
-                fontSize: isMobile ? 60 : 80,
+                fontSize: isMobile ? 40 : 80,
                 color: '#ffeb3b',
                 filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.5))',
               }}
@@ -83,9 +83,9 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({ open, onCon
           </Box>
 
           {/* Title */}
-          <DialogTitle sx={{ p: 0, mb: 3 }}>
+          <DialogTitle sx={{ p: 0, mb: isMobile ? 2 : 3 }}>
             <Typography
-              variant={isMobile ? 'h4' : 'h3'}
+              variant={isMobile ? 'h5' : 'h3'}
               component="h1"
               sx={{
                 fontWeight: 'bold',
@@ -104,8 +104,8 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({ open, onCon
           {/* Age verification message */}
           <Box
             sx={{
-              mb: 4,
-              p: 3,
+              mb: isMobile ? 2 : 4,
+              p: isMobile ? 2 : 3,
               borderRadius: 3,
               background: 'rgba(0, 0, 0, 0.3)',
               border: '2px solid rgba(255, 255, 255, 0.2)',
@@ -115,7 +115,6 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({ open, onCon
             <Typography
               variant={isMobile ? 'h6' : 'h5'}
               sx={{
-                mb: 2,
                 fontWeight: 'bold',
                 color: '#ffeb3b',
                 textShadow: '0 2px 4px rgba(0,0,0,0.7)',
@@ -123,32 +122,22 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({ open, onCon
             >
               ADULT CONTENT - 18+ ONLY
             </Typography>
-            <Typography
-              variant="body1"
-              sx={{
-                color: 'rgba(255, 255, 255, 0.9)',
-                lineHeight: 1.6,
-                fontSize: isMobile ? '1rem' : '1.1rem',
-              }}
-            >
-              This site contains adult content exclusively. You must be at least 18 years old to access this content.
-            </Typography>
           </Box>
 
           {/* Buttons */}
-          <Box sx={{ display: 'flex', gap: 3, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <Box sx={{ display: 'flex', gap: isMobile ? 2 : 3, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Button
               variant="contained"
-              size="large"
+              size={isMobile ? "medium" : "large"}
               startIcon={<CheckIcon />}
               onClick={onConfirm}
               sx={{
                 background: 'linear-gradient(45deg, #4caf50 30%, #8bc34a 90%)',
                 color: 'white',
                 fontWeight: 'bold',
-                fontSize: isMobile ? '1rem' : '1.1rem',
-                px: 4,
-                py: 1.5,
+                fontSize: isMobile ? '0.9rem' : '1.1rem',
+                px: isMobile ? 2 : 4,
+                py: isMobile ? 1 : 1.5,
                 borderRadius: 3,
                 boxShadow: '0 8px 16px rgba(76, 175, 80, 0.4)',
                 '&:hover': {
@@ -159,21 +148,21 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({ open, onCon
                 transition: 'all 0.3s ease',
               }}
             >
-              YES, I AM 18+ YEARS OLD
+              YES, I AM 18+
             </Button>
             
             <Button
               variant="contained"
-              size="large"
+              size={isMobile ? "medium" : "large"}
               startIcon={<CancelIcon />}
               onClick={onReject}
               sx={{
                 background: 'linear-gradient(45deg, #f44336 30%, #d32f2f 90%)',
                 color: 'white',
                 fontWeight: 'bold',
-                fontSize: isMobile ? '1rem' : '1.1rem',
-                px: 4,
-                py: 1.5,
+                fontSize: isMobile ? '0.9rem' : '1.1rem',
+                px: isMobile ? 2 : 4,
+                py: isMobile ? 1 : 1.5,
                 borderRadius: 3,
                 boxShadow: '0 8px 16px rgba(244, 67, 54, 0.4)',
                 '&:hover': {
@@ -184,22 +173,10 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({ open, onCon
                 transition: 'all 0.3s ease',
               }}
             >
-              NO, I AM UNDER 18
+              NO, UNDER 18
             </Button>
           </Box>
 
-          {/* Warning text */}
-          <Typography
-            variant="body2"
-            sx={{
-              mt: 4,
-              color: 'rgba(255, 255, 255, 0.7)',
-              fontStyle: 'italic',
-              fontSize: isMobile ? '0.85rem' : '0.9rem',
-            }}
-          >
-            ⚠️ By confirming, you declare that you are 18 years or older and agree to view adult content
-          </Typography>
         </Box>
       </DialogContent>
     </Dialog>
