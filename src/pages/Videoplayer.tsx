@@ -452,8 +452,24 @@ Please let me know how to proceed with payment.`;
 
   // Handle PayPal payment from modal
   const handlePayPalPaymentFromModal = () => {
+    if (!telegramUsername) {
+      setPurchaseError('Telegram username not configured');
+      return;
+    }
+    
+    const message = `💳 **PayPal Payment Request**
+
+📹 **Video:** ${video?.title}
+💰 **Amount:** $${video?.price.toFixed(2)}
+📅 **Date:** ${new Date().toLocaleString()}
+
+I would like to pay via PayPal for this content. Please provide me with the payment details and steps to complete the purchase.`;
+    
+    const encoded = encodeURIComponent(message);
+    const telegramUrl = `https://t.me/${telegramUsername.replace('@', '')}?text=${encoded}`;
+    
+    window.open(telegramUrl, '_blank', 'noopener,noreferrer');
     setShowPaymentModal(false);
-    startPaymentProcess('paypal');
   };
 
   // Handle crypto payment from modal
