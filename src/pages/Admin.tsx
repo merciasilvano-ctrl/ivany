@@ -215,6 +215,10 @@ const Admin: FC = () => {
   
   // Site config state
   const [siteConfig, setSiteConfig] = useState<SiteConfig | null>(null);
+  
+  // Purchases state
+  const [purchases, setPurchases] = useState<any[]>([]);
+  const [loadingPurchases, setLoadingPurchases] = useState(false);
   const [siteName, setSiteName] = useState('');
   const [paypalClientId, setPaypalClientId] = useState('');
   const [paypalMeUsername, setPaypalMeUsername] = useState('');
@@ -297,6 +301,8 @@ const Admin: FC = () => {
     if (tabValue === 0) {
       fetchVideos();
     } else if (tabValue === 1) {
+      fetchPurchases();
+    } else if (tabValue === 2) {
       fetchUsers();
       fetchSiteConfig();
     }
@@ -361,6 +367,22 @@ const Admin: FC = () => {
       setError('Failed to load users. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch purchases from database
+  const fetchPurchases = async () => {
+    try {
+      setLoadingPurchases(true);
+      setError(null);
+      
+      const purchasesData = await SupabaseService.listPurchases(100);
+      setPurchases(purchasesData);
+    } catch (err) {
+      console.error('Error fetching purchases:', err);
+      setError('Failed to load purchases. Please try again.');
+    } finally {
+      setLoadingPurchases(false);
     }
   };
   
@@ -781,6 +803,7 @@ const Admin: FC = () => {
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={tabValue} onChange={handleTabChange} aria-label="admin tabs">
             <Tab icon={<VideoLibraryIcon />} label="Manage Videos" />
+            <Tab icon={<SecurityIcon />} label="Purchases" />
             <Tab icon={<SettingsIcon />} label="Site Configuration & Users" />
           </Tabs>
         </Box>
@@ -1154,7 +1177,92 @@ const Admin: FC = () => {
         </TabPanel>
         
         {/* Site Configuration & Users Tab */}
+        {/* Purchases Tab - index 1 */}
         <TabPanel value={tabValue} index={1}>
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h5" component="h2" gutterBottom>
+              Purchase History
+            </Typography>
+            
+            {error && (
+              <Alert severity="error" sx={{ mb: 2, mt: 2 }}>
+                {error}
+              </Alert>
+            )}
+
+            {loadingPurchases ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : (
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell><strong>Date</strong></TableCell>
+                      <TableCell><strong>Buyer</strong></TableCell>
+                      <TableCell><strong>Email</strong></TableCell>
+                      <TableCell><strong>Video</strong></TableCell>
+                      <TableCell><strong>Amount</strong></TableCell>
+                      <TableCell><strong>Method</strong></TableCell>
+                      <TableCell><strong>Status</strong></TableCell>
+                      <TableCell><strong>Transaction ID</strong></TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {purchases.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} align="center">
+                          No purchases found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      purchases.map((purchase) => (
+                        <TableRow key={purchase.id}>
+                          <TableCell>
+                            {new Date(purchase.created_at).toLocaleString()}
+                          </TableCell>
+                          <TableCell>{purchase.buyer_name || 'N/A'}</TableCell>
+                          <TableCell>{purchase.buyer_email}</TableCell>
+                          <TableCell>
+                            {purchase.video_title || 'N/A'}
+                          </TableCell>
+                          <TableCell>
+                            {purchase.amount} {purchase.currency?.toUpperCase()}
+                          </TableCell>
+                          <TableCell>
+                            <Chip 
+                              label={purchase.payment_method} 
+                              size="small" 
+                              color={purchase.payment_method === 'stripe' ? 'primary' : purchase.payment_method === 'paypal' ? 'secondary' : 'default'}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Chip 
+                              label={purchase.status} 
+                              size="small" 
+                              color={purchase.status === 'completed' ? 'success' : purchase.status === 'failed' ? 'error' : 'default'}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Tooltip title={purchase.transaction_id}>
+                              <Typography variant="body2" sx={{ fontFamily: 'monospace', maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {purchase.transaction_id}
+                              </Typography>
+                            </Tooltip>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </Box>
+        </TabPanel>
+
+        {/* Site Configuration & Users Tab - index 2 */}
+        <TabPanel value={tabValue} index={2}>
           <Box sx={{ mb: 4 }}>
             <Grid container spacing={2} alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
               <Grid item>
@@ -1778,6 +1886,90 @@ const Admin: FC = () => {
               </Box>
             </Paper>
           )}
+        </TabPanel>
+
+        {/* Purchases Tab */}
+        <TabPanel value={tabValue} index={2}>
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h5" component="h2" gutterBottom>
+              Purchase History
+            </Typography>
+            
+            {error && (
+              <Alert severity="error" sx={{ mb: 2, mt: 2 }}>
+                {error}
+              </Alert>
+            )}
+
+            {loadingPurchases ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : (
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell><strong>Date</strong></TableCell>
+                      <TableCell><strong>Buyer</strong></TableCell>
+                      <TableCell><strong>Email</strong></TableCell>
+                      <TableCell><strong>Video</strong></TableCell>
+                      <TableCell><strong>Amount</strong></TableCell>
+                      <TableCell><strong>Method</strong></TableCell>
+                      <TableCell><strong>Status</strong></TableCell>
+                      <TableCell><strong>Transaction ID</strong></TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {purchases.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} align="center">
+                          No purchases found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      purchases.map((purchase) => (
+                        <TableRow key={purchase.id}>
+                          <TableCell>
+                            {new Date(purchase.created_at).toLocaleString()}
+                          </TableCell>
+                          <TableCell>{purchase.buyer_name || 'N/A'}</TableCell>
+                          <TableCell>{purchase.buyer_email}</TableCell>
+                          <TableCell>
+                            {purchase.video_title || 'N/A'}
+                          </TableCell>
+                          <TableCell>
+                            {purchase.amount} {purchase.currency?.toUpperCase()}
+                          </TableCell>
+                          <TableCell>
+                            <Chip 
+                              label={purchase.payment_method} 
+                              size="small" 
+                              color={purchase.payment_method === 'stripe' ? 'primary' : purchase.payment_method === 'paypal' ? 'secondary' : 'default'}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Chip 
+                              label={purchase.status} 
+                              size="small" 
+                              color={purchase.status === 'completed' ? 'success' : purchase.status === 'failed' ? 'error' : 'default'}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Tooltip title={purchase.transaction_id}>
+                              <Typography variant="body2" sx={{ fontFamily: 'monospace', maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {purchase.transaction_id}
+                              </Typography>
+                            </Tooltip>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </Box>
         </TabPanel>
       </Paper>
       

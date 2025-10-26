@@ -25,6 +25,7 @@ import jsPDF from 'jspdf';
 import { VideoService } from '../services/VideoService';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import TelegramService from '../services/TelegramService';
+import { SupabaseService } from '../services/SupabaseService';
 
 interface PaymentData {
   videoId: string;
@@ -92,6 +93,26 @@ const PaymentSuccess: FC = () => {
 
         setPaymentData(data);
 
+        // Save purchase to Supabase
+        try {
+          await SupabaseService.createPurchase({
+            video_id: videoId,
+            buyer_email: buyerEmail || 'unknown@example.com',
+            buyer_name: buyerName || null,
+            transaction_id: sessionId || `payment_${Date.now()}`,
+            payment_method: paymentMethod,
+            amount: video.price,
+            currency: 'eur',
+            status: 'completed',
+            video_title: video.title,
+            product_link: video.product_link || null,
+            metadata: { sessionId, paymentMethod }
+          });
+          console.log('Purchase saved to Supabase successfully');
+        } catch (dbError) {
+          console.error('Error saving purchase to Supabase:', dbError);
+          // Don't block user flow if database save fails
+        }
 
         // Send Telegram notification
         try {
@@ -410,27 +431,46 @@ Please provide me with the access details.`;
                   <Typography variant="body2" sx={{ mb: 1, fontWeight: 'bold' }}>
                     Link {index + 1}:
                   </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <TextField
-                      fullWidth
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <TextField
+                        fullWidth
+                        variant="outlined"
+                        value={link.trim()}
+                        InputProps={{
+                          readOnly: true,
+                          sx: { 
+                            color: theme.palette.mode === 'dark' ? 'white' : theme.palette.text.primary,
+                            bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'
+                          }
+                        }}
+                      />
+                      <Button
+                        variant="contained"
+                        color={copiedLinkIndex === index ? ("success" as const) : ("primary" as const)}
+                        onClick={() => copyIndividualLink(link, index)}
+                        startIcon={copiedLinkIndex === index ? <CheckCircleIcon /> : <ContentCopyIcon />}
+                        sx={{ whiteSpace: 'nowrap' }}
+                      >
+                        {copiedLinkIndex === index ? 'Copied!' : 'Copy'}
+                      </Button>
+                    </Box>
+                    <Button
                       variant="outlined"
-                      value={link.trim()}
-                      InputProps={{
-                        readOnly: true,
-                        sx: { 
-                          color: theme.palette.mode === 'dark' ? 'white' : theme.palette.text.primary,
-                          bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'
+                      color="success"
+                      fullWidth
+                      onClick={() => window.open(link.trim(), '_blank', 'noopener,noreferrer')}
+                      sx={{ 
+                        borderColor: '#4caf50',
+                        color: '#4caf50',
+                        '&:hover': {
+                          borderColor: '#4caf50',
+                          background: '#4caf50',
+                          color: 'white'
                         }
                       }}
-                    />
-                    <Button
-                      variant="contained"
-                      color={copiedLinkIndex === index ? ("success" as const) : ("primary" as const)}
-                      onClick={() => copyIndividualLink(link, index)}
-                      startIcon={copiedLinkIndex === index ? <CheckCircleIcon /> : <ContentCopyIcon />}
-                      sx={{ whiteSpace: 'nowrap' }}
                     >
-                      {copiedLinkIndex === index ? 'Copied!' : 'Copy'}
+                      🌐 Open Link {index + 1} in New Tab
                     </Button>
                   </Box>
                 </Box>
@@ -470,16 +510,32 @@ Please provide me with the access details.`;
         {/* Action Buttons */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {paymentData.productLink && (
-            <Button
-              variant="contained"
-              color={pdfGenerated ? "success" : "secondary"}
-              fullWidth
-              startIcon={pdfGenerated ? <CheckCircleIcon /> : <PictureAsPdfIcon />}
-              onClick={generatePDF}
-              sx={{ py: 1.5 }}
-            >
-              {pdfGenerated ? 'PDF Downloaded!' : 'Download Receipt PDF'}
-            </Button>
+            <>
+              {getProductLinks().map((link, index) => (
+                <Button
+                  key={index}
+                  variant="contained"
+                  color="success"
+                  fullWidth
+                  size="large"
+                  onClick={() => window.open(link.trim(), '_blank', 'noopener,noreferrer')}
+                  sx={{ py: 2, fontSize: '1.1rem', fontWeight: 'bold' }}
+                >
+                  🎬 Open Content {index + 1} of {getProductLinks().length}
+                </Button>
+              ))}
+              
+              <Button
+                variant="contained"
+                color={pdfGenerated ? "success" : "secondary"}
+                fullWidth
+                startIcon={pdfGenerated ? <CheckCircleIcon /> : <PictureAsPdfIcon />}
+                onClick={generatePDF}
+                sx={{ py: 1.5 }}
+              >
+                {pdfGenerated ? 'PDF Downloaded!' : 'Download Receipt PDF'}
+              </Button>
+            </>
           )}
           
           {telegramUsername && (

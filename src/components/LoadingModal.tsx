@@ -132,8 +132,8 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({ open, onCon
               }}
             >
               Este site contém conteúdo exclusivo para adultos. Você deve ter pelo menos 18 anos de idade para acessar este conteúdo.
-            </Typography>
-          </Box>
+                </Typography>
+              </Box>
 
           {/* Buttons */}
           <Box sx={{ display: 'flex', gap: 3, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -142,10 +142,10 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({ open, onCon
               size="large"
               startIcon={<CheckIcon />}
               onClick={onConfirm}
-              sx={{
-                background: 'linear-gradient(45deg, #4caf50 30%, #8bc34a 90%)',
-                color: 'white',
-                fontWeight: 'bold',
+                sx={{
+                  background: 'linear-gradient(45deg, #4caf50 30%, #8bc34a 90%)',
+                  color: 'white',
+                  fontWeight: 'bold',
                 fontSize: isMobile ? '1rem' : '1.1rem',
                 px: 4,
                 py: 1.5,
@@ -167,10 +167,10 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({ open, onCon
               size="large"
               startIcon={<CancelIcon />}
               onClick={onReject}
-              sx={{
+                sx={{
                 background: 'linear-gradient(45deg, #f44336 30%, #d32f2f 90%)',
-                color: 'white',
-                fontWeight: 'bold',
+                  color: 'white',
+                  fontWeight: 'bold',
                 fontSize: isMobile ? '1rem' : '1.1rem',
                 px: 4,
                 py: 1.5,

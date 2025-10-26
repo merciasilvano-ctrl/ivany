@@ -15,6 +15,23 @@ export interface SupabaseVideoRow {
   created_at: string;
 }
 
+export interface Purchase {
+  id: string;
+  video_id: string | null;
+  buyer_email: string;
+  buyer_name: string | null;
+  transaction_id: string;
+  payment_method: 'paypal' | 'stripe' | 'crypto';
+  amount: number;
+  currency: string;
+  status: 'pending' | 'completed' | 'failed' | 'refunded';
+  video_title: string | null;
+  product_link: string | null;
+  metadata: any;
+  created_at: string;
+  updated_at: string;
+}
+
 export class SupabaseService {
   private static client: SupabaseClient | null = null;
 
@@ -197,6 +214,44 @@ export class SupabaseService {
     const { error } = await this.getClient().from('users').delete().eq('id', id);
     if (error) throw error;
   }
+
+  // Purchases
+
+  static async createPurchase(purchase: Omit<Purchase, 'id' | 'created_at' | 'updated_at'>): Promise<Purchase> {
+    const { data, error } = await this.getClient()
+      .from('purchases')
+      .insert(purchase)
+      .select('*')
+      .single();
+    if (error) throw error;
+    return data as Purchase;
+  }
+
+  static async listPurchases(limit: number = 100): Promise<Purchase[]> {
+    const { data, error } = await this.getClient()
+      .from('purchases')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return data || [];
+  }
+
+  static async getPurchaseByTransactionId(transactionId: string): Promise<Purchase | null> {
+    const { data, error } = await this.getClient()
+      .from('purchases')
+      .select('*')
+      .eq('transaction_id', transactionId)
+      .maybeSingle();
+    if (error) throw error;
+    return data ?? null;
+  }
+
+  static async updatePurchaseStatus(id: string, status: Purchase['status']): Promise<void> {
+    const { error } = await this.getClient()
+      .from('purchases')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', id);
+    if (error) throw error;
+  }
 }
-
-

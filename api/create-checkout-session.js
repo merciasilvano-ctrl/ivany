@@ -260,8 +260,8 @@ export default async function handler(req, res) {
     // Verificar todos os métodos de pagamento ativos na conta Stripe
     let paymentMethodTypes = ['card']; // Card é sempre disponível
     
-    try {
-      const account = await stripe.accounts.retrieve();
+      try {
+        const account = await stripe.accounts.retrieve();
       console.log('Account capabilities:', account.capabilities);
       
       if (account.capabilities) {

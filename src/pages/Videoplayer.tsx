@@ -18,6 +18,15 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import CloseIcon from '@mui/icons-material/Close';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import PaymentIcon from '@mui/icons-material/Payment';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import { useAuth } from '../services/Auth';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { VideoService, Video } from '../services/VideoService';
@@ -83,6 +92,8 @@ const VideoPlayer: FC = () => {
   const [showPrePaymentModal, setShowPrePaymentModal] = useState(false);
   const [paymentType, setPaymentType] = useState<'stripe' | 'paypal' | null>(null);
   const [redirectCountdown, setRedirectCountdown] = useState(7);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedCryptoWallet, setSelectedCryptoWallet] = useState('');
   const theme = useTheme();
 
   useEffect(() => {
@@ -432,6 +443,42 @@ Please let me know how to proceed with payment.`;
         return prev - 1;
       });
     }, 1000);
+  };
+
+  // Handle payment modal
+  const handleShowPaymentModal = () => {
+    setShowPaymentModal(true);
+  };
+
+  // Handle PayPal payment from modal
+  const handlePayPalPaymentFromModal = () => {
+    setShowPaymentModal(false);
+    startPaymentProcess('paypal');
+  };
+
+  // Handle crypto payment from modal
+  const handleCryptoPaymentFromModal = () => {
+    if (!selectedCryptoWallet) return;
+    
+    const [cryptoType, walletAddress] = selectedCryptoWallet.split(':');
+    
+    if (!telegramUsername) return;
+    
+    const message = `₿ **Crypto Payment Request**
+
+📹 **Video:** ${video?.title}
+💰 **Amount:** $${video?.price.toFixed(2)}
+🪙 **Cryptocurrency:** ${cryptoType.toUpperCase()}
+💼 **My Wallet:** ${walletAddress}
+📅 **Date:** ${new Date().toLocaleString()}
+
+I'm sending the payment from my wallet. Please confirm the transaction and provide access to the content.`;
+    
+    const encoded = encodeURIComponent(message);
+    const telegramUrl = `https://t.me/${telegramUsername.replace('@', '')}?text=${encoded}`;
+    
+    window.open(telegramUrl, '_blank', 'noopener,noreferrer');
+    setShowPaymentModal(false);
   };
 
   // Handle Stripe payment (Nova função apenas para redirecionamento)
@@ -877,88 +924,44 @@ Please let me know how to proceed with payment.`;
                     </Box>
                   )}
                   
-                  {/* Stripe Button */}
-                  {stripePublishableKey && (
-                    <Box sx={{ width: '100%', mb: { xs: 2, md: 0 } }}>
-                      <Button
-                        variant="contained"
-                        fullWidth
-                        onClick={handleStripePayment}
-                        disabled={isStripeLoading}
-                        sx={{
-                          py: 1.5,
-                          backgroundColor: '#635bff',
-                          color: 'white',
-                          fontWeight: 'bold',
-                          fontSize: 16,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: 1,
-                          '&:hover': {
-                            backgroundColor: '#4b45c6',
-                          }
-                        }}
-                      >
-                        {isStripeLoading ? (
-                          'Processing...'
-                        ) : (
-                          <>
-                            {/* Apple Pay Icon */}
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, bgcolor: 'white', borderRadius: 1 }}>
-                              <Typography variant="caption" sx={{ fontSize: '8px', fontWeight: 'bold', color: 'black' }}>🍎</Typography>
-                            </Box>
-                            
-                            {/* Amazon Pay Icon */}
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, bgcolor: '#FF9900', borderRadius: 1 }}>
-                              <Typography variant="caption" sx={{ fontSize: '6px', fontWeight: 'bold', color: 'white' }}>A</Typography>
-                            </Box>
-                            
-                            {/* Visa Icon */}
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, bgcolor: '#1A1F71', borderRadius: 1 }}>
-                              <Typography variant="caption" sx={{ fontSize: '7px', fontWeight: 'bold', color: 'white' }}>VISA</Typography>
-                            </Box>
-                            
-                            {/* Mastercard Icon */}
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, bgcolor: 'white', borderRadius: 1, position: 'relative' }}>
-                              <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#EB001B', position: 'absolute', left: 6 }} />
-                              <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#F79E1B', position: 'absolute', right: 6 }} />
-                            </Box>
-                            
-                            <Typography variant="body2" sx={{ ml: 1, fontSize: '14px', fontWeight: 'bold' }}>
-                              Pay Securely
-                            </Typography>
-                          </>
-                        )}
-                      </Button>
-                    </Box>
-                  )}
-                  
-                  {/* Crypto Button */}
-                  {cryptoWallets.length > 0 && (
-                    <Box sx={{ width: '100%', mb: { xs: 2, md: 0 } }}>
-                      <Button
-                        variant="outlined"
-                        fullWidth
-                        startIcon={<MonetizationOnIcon />}
-                        onClick={() => setShowCryptoModal(true)}
-                        sx={{ 
-                          py: 1.5,
-                          borderColor: '#26a17b',
-                          color: '#26a17b',
-                          fontWeight: 'bold',
-                          fontSize: 16,
-                          '&:hover': {
-                            borderColor: '#1e1e1e',
-                            color: '#fff',
-                            background: '#26a17b',
-                          }
-                        }}
-                      >
-                        Pay with Crypto
-                      </Button>
-                    </Box>
-                  )}
+                  {/* Pay Now Button - Opens payment modal */}
+                  <Box sx={{ width: '100%', mb: { xs: 2, md: 0 } }}>
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      onClick={handleShowPaymentModal}
+                      disabled={isStripeLoading}
+                      sx={{
+                        py: 2,
+                        backgroundColor: '#d32f2f',
+                        color: 'white',
+                        fontWeight: 'bold',
+                        fontSize: 18,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 1,
+                        '&:hover': {
+                          backgroundColor: '#b71c1c',
+                        },
+                        '&:disabled': {
+                          backgroundColor: '#555',
+                          color: '#999'
+                        }
+                      }}
+                    >
+                      {isStripeLoading ? (
+                        'Processing...'
+                      ) : (
+                        <>
+                          <CreditCardIcon />
+                          <Typography variant="body1" sx={{ fontSize: '16px', fontWeight: 'bold' }}>
+                            Pay Now
+                          </Typography>
+                        </>
+                      )}
+                    </Button>
+                  </Box>
                   
                 </Grid>
                 
@@ -1198,6 +1201,155 @@ Please let me know how to proceed with payment.`;
           </Box>
         </Fade>
       </Modal>
+
+      {/* Payment Options Modal */}
+      <Dialog 
+        open={showPaymentModal} 
+        onClose={() => setShowPaymentModal(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            background: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)',
+            borderRadius: 3,
+            border: '1px solid #d32f2f'
+          }
+        }}
+      >
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 2, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+          <Typography variant="h6" sx={{ color: 'white', fontWeight: 'bold' }}>
+            Select Payment Method
+          </Typography>
+          <Button onClick={() => setShowPaymentModal(false)} sx={{ color: 'white', minWidth: 'auto', p: 0 }}>
+            <CloseIcon />
+          </Button>
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          <Typography variant="body1" sx={{ color: '#ccc', mb: 3, textAlign: 'center' }}>
+            Video: <strong>{video?.title}</strong>
+            <br />
+            Price: <strong style={{ color: '#4caf50' }}>${video?.price.toFixed(2)}</strong>
+          </Typography>
+
+          {/* Stripe Payment */}
+          <Button
+            variant="contained"
+            fullWidth
+            size="large"
+            startIcon={<PaymentIcon />}
+            onClick={() => {
+              setShowPaymentModal(false);
+              handleStripePayment();
+            }}
+            disabled={isStripeLoading || !stripePublishableKey}
+            sx={{
+              mb: 2,
+              py: 2,
+              background: 'linear-gradient(45deg, #5433ff 30%, #8e44ad 90%)',
+              color: 'white',
+              fontWeight: 'bold',
+              fontSize: '1rem',
+              '&:hover': {
+                background: 'linear-gradient(45deg, #5433ff 40%, #8e44ad 100%)',
+              },
+              '&:disabled': {
+                background: '#555',
+                color: '#999'
+              }
+            }}
+          >
+            {isStripeLoading ? 'Processing...' : '⚡ Pay Instantly (Stripe)'}
+          </Button>
+
+          {/* PayPal Payment */}
+          <Button
+            variant="contained"
+            fullWidth
+            size="large"
+            startIcon={<TelegramIcon />}
+            onClick={handlePayPalPaymentFromModal}
+            disabled={!telegramUsername}
+            sx={{
+              mb: 2,
+              py: 2,
+              background: 'linear-gradient(45deg, #0070ba 30%, #009cde 90%)',
+              color: 'white',
+              fontWeight: 'bold',
+              fontSize: '1rem',
+              '&:hover': {
+                background: 'linear-gradient(45deg, #0070ba 40%, #009cde 100%)',
+              },
+              '&:disabled': {
+                background: '#555',
+                color: '#999'
+              }
+            }}
+          >
+            💰 Pay with PayPal (via Telegram)
+          </Button>
+
+          {/* Crypto Payment */}
+          <Box>
+            {cryptoWallets && cryptoWallets.length > 0 ? (
+              <>
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel sx={{ color: '#ccc' }}>Select Crypto Wallet</InputLabel>
+                  <Select
+                    value={selectedCryptoWallet}
+                    onChange={(e) => setSelectedCryptoWallet(e.target.value)}
+                    sx={{
+                      color: 'white',
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#d32f2f',
+                      },
+                      '& .MuiSvgIcon-root': {
+                        color: '#ccc'
+                      }
+                    }}
+                  >
+                    {cryptoWallets.map((wallet: string, index: number) => {
+                      const [cryptoType] = wallet.split(':');
+                      return (
+                        <MenuItem key={index} value={wallet}>
+                          {cryptoType.toUpperCase()} Wallet
+                        </MenuItem>
+                      );
+                    })}
+                  </Select>
+                </FormControl>
+                <Button
+                  variant="contained"
+                  fullWidth
+                  size="large"
+                  startIcon={<AccountBalanceWalletIcon />}
+                  onClick={handleCryptoPaymentFromModal}
+                  disabled={!selectedCryptoWallet || !telegramUsername}
+                  sx={{
+                    py: 2,
+                    background: 'linear-gradient(45deg, #f7931a 30%, #ff9900 90%)',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    fontSize: '1rem',
+                    '&:hover': {
+                      background: 'linear-gradient(45deg, #f7931a 40%, #ff9900 100%)',
+                    },
+                    '&:disabled': {
+                      background: '#555',
+                      color: '#999'
+                    }
+                  }}
+                >
+                  ₿ Pay with Cryptocurrency
+                </Button>
+              </>
+            ) : (
+              <Typography variant="body2" sx={{ color: '#999', textAlign: 'center', py: 2 }}>
+                Crypto wallets not configured
+              </Typography>
+            )}
+          </Box>
+        </DialogContent>
+      </Dialog>
       
     </Box>
   );
