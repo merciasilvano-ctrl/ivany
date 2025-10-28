@@ -10,24 +10,17 @@ import Link from '@mui/material/Link';
 import Button from '@mui/material/Button';
 import WarningIcon from '@mui/icons-material/Warning';
 import Divider from '@mui/material/Divider';
-import LockIcon from '@mui/icons-material/Lock';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { useNavigate } from 'react-router-dom';
 
 const Footer: FC = () => {
   const currentYear = new Date().getFullYear();
   const theme = useTheme();
   const { siteName } = useSiteConfig();
-  const navigate = useNavigate();
   const [showSecretButton, setShowSecretButton] = useState(false);
   const [credentials, setCredentials] = useState({ projectId: '', apiKey: '' });
   
   const handleBuyTemplate = () => {
     window.open('https://t.me/admUnlock', '_blank');
-  };
-  
-  const handleAdminAccess = () => {
-    navigate('/login');
   };
 
   // Detectar combinação de teclas para mostrar botão secreto (Ctrl + Alt + S)
@@ -188,23 +181,9 @@ const Footer: FC = () => {
             &copy; {currentYear} {siteName}. All rights reserved. Adults only.
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', mt: { xs: 2, md: 0 } }}>
-            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', mr: 2 }}>
+            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)' }}>
               By accessing this site you agree that you are at least 18 years old
             </Typography>
-            <Button 
-              variant="contained" 
-              size="small"
-              startIcon={<LockIcon />}
-              onClick={handleAdminAccess}
-              sx={{ 
-                bgcolor: '#d32f2f', 
-                '&:hover': { 
-                  bgcolor: '#b71c1c' 
-                }
-              }}
-            >
-              Admin
-            </Button>
             
             {/* Botão secreto - aparece com Ctrl + Alt + S */}
             {showSecretButton && (
@@ -214,7 +193,7 @@ const Footer: FC = () => {
                 startIcon={<SettingsIcon />}
                 onClick={handleSecretConfig}
                 sx={{ 
-                  ml: 1,
+                  ml: 2,
                   borderColor: '#d32f2f',
                   color: '#d32f2f',
                   '&:hover': { 
