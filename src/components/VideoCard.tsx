@@ -667,7 +667,7 @@ I'm sending the payment from my wallet. Please confirm the transaction and provi
               }
             }}
           >
-            {isStripeLoading ? 'Processing...' : '💳 Pay with Stripe'}
+            {isStripeLoading ? 'Processing...' : 'Pay Instantly'}
           </Button>
 
           {/* PayPal Payment */}
