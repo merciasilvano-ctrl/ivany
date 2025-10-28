@@ -757,6 +757,13 @@ I'm sending the payment from my wallet. Please confirm the transaction and provi
               </Typography>
             )}
           </Box>
+
+          {/* Bonus Message */}
+          <Box sx={{ mt: 3, p: 2, backgroundColor: 'rgba(142, 36, 170, 0.1)', borderRadius: 2, border: '1px solid rgba(142, 36, 170, 0.3)' }}>
+            <Typography variant="body2" sx={{ color: '#4caf50', textAlign: 'center', fontWeight: 'bold' }}>
+              🎁 Bonus: After payment, message us on Telegram for free bonus pack!
+            </Typography>
+          </Box>
         </DialogContent>
       </Dialog>
     </>
