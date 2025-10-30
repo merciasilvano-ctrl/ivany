@@ -257,82 +257,11 @@ export default async function handler(req, res) {
     // Select a random product name
     const randomProductName = productNames[Math.floor(Math.random() * productNames.length)];
     
-    // Verificar todos os métodos de pagamento ativos na conta Stripe
-    let paymentMethodTypes = ['card']; // Card é sempre disponível
-    
-      try {
-        const account = await stripe.accounts.retrieve();
-      console.log('Account capabilities:', account.capabilities);
-      
-      if (account.capabilities) {
-        // Verificar métodos de pagamento disponíveis baseado nas capacidades da conta
-        const capabilities = account.capabilities;
-        
-        // Métodos de cartão e débito
-        if (capabilities.card_payments === 'active') {
-          paymentMethodTypes.push('card');
-        }
-        
-        // Métodos específicos por país e moeda
-        const countrySpecificMethods = getCountrySpecificMethods(clientCountry, currency.toLowerCase(), capabilities);
-        paymentMethodTypes.push(...countrySpecificMethods);
-        
-        // Métodos globais
-        if (capabilities.alipay_payments === 'active') {
-          paymentMethodTypes.push('alipay');
-        }
-        if (capabilities.wechat_pay_payments === 'active') {
-          paymentMethodTypes.push('wechat_pay');
-        }
-        if (capabilities.paypal_payments === 'active') {
-          paymentMethodTypes.push('paypal');
-        }
-        if (capabilities.klarna_payments === 'active') {
-          paymentMethodTypes.push('klarna');
-        }
-        if (capabilities.afterpay_clearpay_payments === 'active') {
-          paymentMethodTypes.push('afterpay_clearpay');
-        }
-        if (capabilities.grabpay_payments === 'active') {
-          paymentMethodTypes.push('grabpay');
-        }
-        if (capabilities.oxxo_payments === 'active') {
-          paymentMethodTypes.push('oxxo');
-        }
-        if (capabilities.eps_payments === 'active') {
-          paymentMethodTypes.push('eps');
-        }
-        if (capabilities.giropay_payments === 'active') {
-          paymentMethodTypes.push('giropay');
-        }
-        if (capabilities.p24_payments === 'active') {
-          paymentMethodTypes.push('p24');
-        }
-        if (capabilities.blik_payments === 'active') {
-          paymentMethodTypes.push('blik');
-        }
-        if (capabilities.affirm_payments === 'active') {
-          paymentMethodTypes.push('affirm');
-        }
-        if (capabilities.cashapp_payments === 'active') {
-          paymentMethodTypes.push('cashapp');
-        }
-      }
-      
-      // Remover duplicatas e manter apenas métodos únicos
-      paymentMethodTypes = [...new Set(paymentMethodTypes)];
-      
-    } catch (accountError) {
-      console.warn('Error checking account capabilities:', accountError.message);
-      // Em caso de erro, usar apenas card como fallback
-      paymentMethodTypes = ['card'];
-    }
-    
-    console.log(`Active payment methods for ${currency.toUpperCase()} (Country: ${clientCountry}):`, paymentMethodTypes);
-    
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: paymentMethodTypes,
+      // Let Stripe curate all eligible methods (Apple/Google Pay, locals, Link, etc.)
+      automatic_payment_methods: { enabled: true },
+      payment_method_collection: 'always',
       line_items: [
         {
           price_data: {
