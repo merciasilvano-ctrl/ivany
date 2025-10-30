@@ -119,6 +119,7 @@ interface Video {
   created_at: string;
   is_active: boolean;
   duration?: number;
+  is_free?: boolean;
 }
 
 // User interface
@@ -331,7 +332,8 @@ const Admin: FC = () => {
         duration: typeof video.duration === 'string' ? 
           // Convert duration string (MM:SS or HH:MM:SS) to seconds
           video.duration.split(':').reduce((acc, time) => (60 * acc) + parseInt(time), 0) : 
-          undefined
+          undefined,
+        is_free: video.is_free,
       })) as unknown as Video[];
       
       setVideos(adminVideos);
@@ -595,7 +597,8 @@ const Admin: FC = () => {
         description: videoDescription,
         price: price,
         productLink: productLink || undefined,
-        isActive: true
+        isActive: true,
+        is_free: isFree,
       };
 
       // Adicionar duração se fornecida ou se for novo vídeo
@@ -656,7 +659,8 @@ const Admin: FC = () => {
             video_file_id: videoData.videoFileId,
             thumbnail_file_id: videoData.thumbnailFileId,
             product_link: videoData.productLink,
-            is_active: true
+            is_active: true,
+            is_free: isFree,
           };
           await SupabaseService.updateVideo(editingVideo, updates);
           videoId = editingVideo;
@@ -671,6 +675,7 @@ const Admin: FC = () => {
             thumbnail_file_id: videoData.thumbnailFileId,
             product_link: videoData.productLink,
             is_active: true,
+            is_free: isFree,
           });
           videoId = created.id;
           showFeedback('Video uploaded successfully!', 'success');
@@ -704,6 +709,7 @@ const Admin: FC = () => {
       setThumbnailFile(null);
       setVideoDuration(null);
       setSourceFiles([]);
+      setIsFree(false);
 
     } catch (err) {
       console.error('Error saving video:', err);
@@ -865,6 +871,7 @@ const Admin: FC = () => {
                       <TableCell>Price</TableCell>
                       <TableCell>Duration</TableCell>
                       <TableCell>Status</TableCell>
+                      <TableCell>Free</TableCell>
                       <TableCell>Actions</TableCell>
                     </TableRow>
                   </TableHead>
@@ -875,6 +882,9 @@ const Admin: FC = () => {
                         <TableCell>${video.price}</TableCell>
                         <TableCell>{video.duration ? `${Math.floor(video.duration / 60)}:${(video.duration % 60).toString().padStart(2, '0')}` : '00:00'}</TableCell>
                         <TableCell>{video.is_active ? 'Active' : 'Inactive'}</TableCell>
+                        <TableCell align="center">
+                          {video.is_free ? <Chip color="success" size="small" label="FREE" /> : ''}
+                        </TableCell>
                         <TableCell>
                           <IconButton 
                             color="primary" 
@@ -885,6 +895,7 @@ const Admin: FC = () => {
                               setProductLink(video.product_link || '');
                               setVideoDuration(video.duration || null);
                               setEditingVideo(video.$id);
+                              setIsFree(Boolean(video.is_free));
                               setShowVideoForm(true);
                             }}
                             aria-label="edit video"
@@ -908,7 +919,7 @@ const Admin: FC = () => {
                     ))}
                     {filteredVideos.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={5} align="center">
+                        <TableCell colSpan={6} align="center">
                           {searchTerm.trim() ? 'No videos found matching your search' : 'No videos found'}
                         </TableCell>
                       </TableRow>
@@ -1015,6 +1026,15 @@ const Admin: FC = () => {
                       Duration: {Math.floor(videoDuration / 60)}:{(videoDuration % 60).toString().padStart(2, '0')}
                     </Typography>
                   )}
+                </Grid>
+
+                <Grid item xs={12}>
+                  <FormControlLabel
+                    control={
+                      <Switch checked={isFree} onChange={e => setIsFree(e.target.checked)} color="success" />
+                    }
+                    label="Mark as Free"
+                  />
                 </Grid>
               </Grid>
 
@@ -1158,6 +1178,7 @@ const Admin: FC = () => {
                     setVideoDuration(null);
                     setRelatedVideos([]);
                     setShowRelatedVideos(false);
+                    setIsFree(false);
                   }}
                 >
                   Cancel

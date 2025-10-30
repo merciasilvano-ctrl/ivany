@@ -42,6 +42,7 @@ import { useTheme } from '@mui/material/styles';
 import { StripeService } from '../services/StripeService';
 import { LinearProgress } from '@mui/material';
 import TelegramService from '../services/TelegramService';
+import Chip from '@mui/material/Chip';
 
 // Extend Video interface to include product_link
 declare module '../services/VideoService' {
@@ -845,6 +846,27 @@ I'm sending the payment from my wallet. Please confirm the transaction and provi
           </Box>
         )}
         
+        {/* Video title, badges and free link */}
+        <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Typography variant="h4" component="h1" sx={{ color: theme.palette.mode === 'dark' ? 'white' : theme.palette.text.primary, fontWeight: 'bold' }}>
+            {video?.title || 'Video Details'}
+          </Typography>
+          {video?.is_free && (
+            <Chip label="FREE" color="success" sx={{ fontWeight: 'bold', fontSize: '1rem', height: '32px' }} />
+          )}
+          {video?.is_free && video?.product_link && (
+            <Button
+              variant="contained"
+              color="success"
+              size="large"
+              sx={{ fontWeight: 'bold', ml: 2 }}
+              onClick={() => window.open(video.product_link, '_blank')}
+            >
+              View Product Link
+            </Button>
+          )}
+        </Box>
+        
         {/* Video description */}
         <Box sx={{ mb: 4 }}>
             <Box sx={{ 
@@ -855,14 +877,6 @@ I'm sending the payment from my wallet. Please confirm the transaction and provi
               gap: 2,
               mb: 2
             }}>
-              <Typography variant="h4" component="h1" sx={{ 
-                color: theme.palette.mode === 'dark' ? 'white' : theme.palette.text.primary, 
-                mt: 2,
-                flex: 1,
-                minWidth: '200px'
-              }}>
-                {video?.title || 'Video Details'}
-              </Typography>
               
                {/* Price Display - Enhanced */}
                <Box sx={{ 
@@ -904,113 +918,116 @@ I'm sending the payment from my wallet. Please confirm the transaction and provi
           </Typography>
           
             {/* Payment Options */}
-            <Box sx={{ mt: 4 }}>
-              {/* Payment Options Layout - Reorganized for better responsiveness */}
-              <Grid container spacing={3} justifyContent="center" alignItems="stretch" sx={{ mb: 4 }}>
-                {/* Left column for payment methods */}
-                <Grid item xs={12} md={8} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  {/* PayPal Payment Button - Using Client ID */}
-                  {paypalClientId && paypalClientId.startsWith('A') && (
+            {/* Only show payment section if not free */}
+            {!video?.is_free && (
+              <Box sx={{ mt: 4 }}>
+                {/* Payment Options Layout - Reorganized for better responsiveness */}
+                <Grid container spacing={3} justifyContent="center" alignItems="stretch" sx={{ mb: 4 }}>
+                  {/* Left column for payment methods */}
+                  <Grid item xs={12} md={8} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {/* PayPal Payment Button - Using Client ID */}
+                    {paypalClientId && paypalClientId.startsWith('A') && (
+                      <Box sx={{ width: '100%', mb: { xs: 2, md: 0 } }}>
+                        <PayPalScriptProvider 
+                          options={{
+                            clientId: paypalClientId,
+                            currency: "USD",
+                            intent: "capture",
+                            disableFunding: "credit",
+                            components: "buttons"
+                          }}
+                        >
+                          <PayPalButtons
+                            fundingSource={undefined}
+                            style={{ 
+                              layout: "vertical",
+                              color: "gold",
+                              shape: "rect",
+                              label: "paypal"
+                            }}
+                            onClick={async (data, actions) => {
+                              startPaymentProcess('paypal');
+                              return Promise.resolve();
+                            }}
+                            createOrder={createOrder}
+                            onApprove={onApprove}
+                          />
+                        </PayPalScriptProvider>
+                      </Box>
+                    )}
+                    
+                    {/* Pay Now Button - Opens payment modal */}
                     <Box sx={{ width: '100%', mb: { xs: 2, md: 0 } }}>
-                      <PayPalScriptProvider 
-                        options={{
-                          clientId: paypalClientId,
-                          currency: "USD",
-                          intent: "capture",
-                          disableFunding: "credit",
-                          components: "buttons"
+                      <Button
+                        variant="contained"
+                        fullWidth
+                        onClick={handleShowPaymentModal}
+                        disabled={isStripeLoading}
+                        sx={{
+                          py: 2,
+                          backgroundColor: '#d32f2f',
+                          color: 'white',
+                          fontWeight: 'bold',
+                          fontSize: 18,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 1,
+                          '&:hover': {
+                            backgroundColor: '#b71c1c',
+                          },
+                          '&:disabled': {
+                            backgroundColor: '#555',
+                            color: '#999'
+                          }
                         }}
                       >
-                        <PayPalButtons
-                          fundingSource={undefined}
-                          style={{ 
-                            layout: "vertical",
-                            color: "gold",
-                            shape: "rect",
-                            label: "paypal"
-                          }}
-                          onClick={async (data, actions) => {
-                            startPaymentProcess('paypal');
-                            return Promise.resolve();
-                          }}
-                          createOrder={createOrder}
-                          onApprove={onApprove}
-                        />
-                      </PayPalScriptProvider>
+                        {isStripeLoading ? (
+                          'Processing...'
+                        ) : (
+                          <>
+                            <CreditCardIcon />
+                            <Typography variant="body1" sx={{ fontSize: '16px', fontWeight: 'bold' }}>
+                              Pay Now
+                            </Typography>
+                          </>
+                        )}
+                      </Button>
                     </Box>
-                  )}
-                  
-                  {/* Pay Now Button - Opens payment modal */}
-                  <Box sx={{ width: '100%', mb: { xs: 2, md: 0 } }}>
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      onClick={handleShowPaymentModal}
-                      disabled={isStripeLoading}
-                      sx={{
-                        py: 2,
-                        backgroundColor: '#d32f2f',
-                        color: 'white',
-                        fontWeight: 'bold',
-                        fontSize: 18,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 1,
-                        '&:hover': {
-                          backgroundColor: '#b71c1c',
-                        },
-                        '&:disabled': {
-                          backgroundColor: '#555',
-                          color: '#999'
-                        }
-                      }}
-                    >
-                      {isStripeLoading ? (
-                        'Processing...'
-                      ) : (
-                        <>
-                          <CreditCardIcon />
-                          <Typography variant="body1" sx={{ fontSize: '16px', fontWeight: 'bold' }}>
-                            Pay Now
-                          </Typography>
-                        </>
-                      )}
-                    </Button>
-                  </Box>
-                  
-                </Grid>
-                
-                {/* Right column for telegram contact */}
-                {telegramUsername && (
-                  <Grid item xs={12} md={4} sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Button
-                      variant="outlined"
-                      fullWidth
-                      startIcon={<TelegramIcon />}
-                      href={telegramHref}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      sx={{ 
-                        py: 1.5,
-                        height: '100%',
-                        borderColor: '#229ED9',
-                        color: '#229ED9',
-                        fontWeight: 'bold',
-                        fontSize: 16,
-                        '&:hover': {
-                          borderColor: '#229ED9',
-                          color: '#fff',
-                          background: '#229ED9',
-                        }
-                      }}
-                    >
-                      Contact on Telegram
-                    </Button>
+                    
                   </Grid>
-                )}
-              </Grid>
-            </Box>
+                  
+                  {/* Right column for telegram contact */}
+                  {telegramUsername && (
+                    <Grid item xs={12} md={4} sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        startIcon={<TelegramIcon />}
+                        href={telegramHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{ 
+                          py: 1.5,
+                          height: '100%',
+                          borderColor: '#229ED9',
+                          color: '#229ED9',
+                          fontWeight: 'bold',
+                          fontSize: 16,
+                          '&:hover': {
+                            borderColor: '#229ED9',
+                            color: '#fff',
+                            background: '#229ED9',
+                          }
+                        }}
+                      >
+                        Contact on Telegram
+                      </Button>
+                    </Grid>
+                  )}
+                </Grid>
+              </Box>
+            )}
         </Box>
         
         {/* Suggested Videos Section */}

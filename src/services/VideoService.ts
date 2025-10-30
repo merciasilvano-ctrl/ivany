@@ -17,6 +17,7 @@ export interface Video {
   createdAt: string;
   views: number;
   product_link?: string;
+  is_free?: boolean; // Free content flag
 }
 
 // Sort options
@@ -93,7 +94,8 @@ export class VideoService {
       isPurchased: videoData.isPurchased || false,
       createdAt: videoData.createdAt,
       views: videoData.views,
-      product_link: videoData.productLink || ''
+      product_link: videoData.productLink || '',
+      is_free: !!videoData.is_free,
     };
   }
 
@@ -143,7 +145,8 @@ export class VideoService {
         isPurchased: false,
         createdAt: row.created_at,
         views: row.views || 0,
-        product_link: row.product_link || ''
+        product_link: row.product_link || '',
+        is_free: !!row.is_free,
       }));
       
       // Aplicar pesquisa do lado do cliente se a consulta for fornecida
@@ -241,7 +244,8 @@ export class VideoService {
         isPurchased: false,
         createdAt: row.created_at,
         views: row.views || 0,
-        product_link: row.product_link || ''
+        product_link: row.product_link || '',
+        is_free: !!row.is_free,
       };
 
       // Attach up to 3 preview sources for this title
@@ -389,6 +393,7 @@ export class VideoService {
     videoFileId: string;
     thumbnailFileId: string;
     productLink?: string;
+    is_free?: boolean;
   }): Promise<Video | null> {
     try {
       // Limpar cache antes da operação para evitar inconsistências
@@ -406,6 +411,7 @@ export class VideoService {
           is_active: true,
           views: 0,
           thumbnail_url: null,
+          is_free: !!videoData.is_free,
         } as any);
 
       await this.forceRefreshCache();
@@ -423,7 +429,8 @@ export class VideoService {
           isPurchased: false,
           createdAt: created.created_at,
           views: created.views || 0,
-          product_link: created.product_link || ''
+          product_link: created.product_link || '',
+          is_free: !!created.is_free,
         };
       }
     } catch (error) {
@@ -441,6 +448,7 @@ export class VideoService {
     videoFileId?: string;
     thumbnailFileId?: string;
     productLink?: string;
+    is_free?: boolean;
   }): Promise<Video | null> {
     try {
       // Limpar cache antes da operação para evitar inconsistências
@@ -454,6 +462,7 @@ export class VideoService {
           video_file_id: updates.videoFileId,
           thumbnail_file_id: updates.thumbnailFileId,
           product_link: updates.productLink,
+          is_free: updates.is_free,
         };
         // remove undefined keys
         Object.keys(supaUpdates).forEach(k => supaUpdates[k] === undefined && delete supaUpdates[k]);
@@ -473,7 +482,8 @@ export class VideoService {
           isPurchased: false,
           createdAt: row.created_at,
           views: row.views || 0,
-          product_link: row.product_link || ''
+          product_link: row.product_link || '',
+          is_free: !!row.is_free,
         };
       }
     } catch (error) {

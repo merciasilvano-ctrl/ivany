@@ -39,6 +39,8 @@ interface VideoCardProps {
       duration?: string | number;
       price: number;
     }>;
+    is_free?: boolean;
+    product_link?: string;
   };
 }
 
@@ -467,6 +469,24 @@ I'm sending the payment from my wallet. Please confirm the transaction and provi
             zIndex: 2,
           }}
         />
+        {/* FREE badge */}
+        {video.is_free && (
+          <Chip 
+            label="FREE" 
+            size="small" 
+            sx={{ 
+              position: 'absolute', 
+              top: 8, 
+              right: 64, 
+              backgroundColor: '#27ae60', 
+              color: 'white', 
+              fontWeight: 'bold', 
+              fontSize: '0.8rem', 
+              height: '22px', 
+              zIndex: 2,
+            }}
+          />
+        )}
         
         {/* Hover overlay without central play/lock icon */}
         <Box
@@ -574,205 +594,227 @@ I'm sending the payment from my wallet. Please confirm the transaction and provi
           >
             Preview
           </Button>
-          <Button
-            variant="contained"
-            fullWidth
-            startIcon={<TelegramIcon />}
-            href={telegramHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            sx={{
-              backgroundColor: '#d32f2f',
-              color: 'white',
-              fontWeight: 'bold',
-              '&:hover': {
-                backgroundColor: '#b71c1c',
-              }
-            }}
-          >
-            Telegram
-          </Button>
-          <Button
-            variant="contained"
-            fullWidth
-            startIcon={<CreditCardIcon />}
-            onClick={handleStripePay}
-            disabled={isStripeLoading}
-            sx={{
-              backgroundColor: '#d32f2f',
-              color: 'white',
-              fontWeight: 'bold',
-              '&:hover': {
-                backgroundColor: '#b71c1c',
-              }
-            }}
-          >
-            Pay
-          </Button>
+          {/* Show link button only if is_free and has product_link */}
+          {video.is_free && video.product_link && (
+            <Button
+              variant="contained"
+              fullWidth
+              color="success"
+              onClick={e => {
+                e.stopPropagation();
+                window.open(video.product_link, '_blank');
+              }}
+              sx={{ fontWeight: 'bold' }}
+            >
+              View Product Link
+            </Button>
+          )}
+          {/* Payment buttons only if not free */}
+          {!video.is_free && (
+            <>
+              <Button
+                variant="contained"
+                fullWidth
+                startIcon={<TelegramIcon />}
+                href={telegramHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{
+                  backgroundColor: '#d32f2f',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  '&:hover': {
+                    backgroundColor: '#b71c1c',
+                  }
+                }}
+              >
+                Telegram
+              </Button>
+              <Button
+                variant="contained"
+                fullWidth
+                startIcon={<CreditCardIcon />}
+                onClick={handleStripePay}
+                disabled={isStripeLoading}
+                sx={{
+                  backgroundColor: '#d32f2f',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  '&:hover': {
+                    backgroundColor: '#b71c1c',
+                  }
+                }}
+              >
+                Pay
+              </Button>
+            </>
+          )}
         </Box>
 
       </CardContent>
       </Card>
 
       {/* Payment Options Modal */}
-      <Dialog 
-        open={showPaymentModal} 
-        onClose={() => setShowPaymentModal(false)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            background: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)',
-            borderRadius: 3,
-            border: '1px solid #d32f2f'
-          }
-        }}
-      >
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 2, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-          <Typography variant="h6" sx={{ color: 'white', fontWeight: 'bold' }}>
-            Select Payment Method
-          </Typography>
-          <Button onClick={() => setShowPaymentModal(false)} sx={{ color: 'white', minWidth: 'auto', p: 0 }}>
-            <CloseIcon />
-          </Button>
-        </DialogTitle>
-        <DialogContent sx={{ mt: 2 }}>
-          {/* Privacy and delivery notice */}
-          <Box sx={{ mb: 2, p: 1.5, backgroundColor: 'rgba(24, 171, 63, 0.08)', borderRadius: 2, border: '1px solid #4caf50' }}>
-            <Typography variant="body2" sx={{ color: '#4caf50', textAlign: 'center', fontWeight: 'bold' }}>
-              For privacy, generic names will appear during automatic payment checkout.<br />
-              Content is delivered automatically after payment.
+      {!video.is_free && (
+        <Dialog 
+          open={showPaymentModal} 
+          onClose={() => setShowPaymentModal(false)}
+          maxWidth="sm"
+          fullWidth
+          PaperProps={{
+            sx: {
+              background: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)',
+              borderRadius: 3,
+              border: '1px solid #d32f2f'
+            }
+          }}
+        >
+          <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 2, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <Typography variant="h6" sx={{ color: 'white', fontWeight: 'bold' }}>
+              Select Payment Method
             </Typography>
-          </Box>
-          <Typography variant="body1" sx={{ color: '#ccc', mb: 3, textAlign: 'center' }}>
-            Video: <strong>{video.title}</strong>
-            <br />
-            Price: <strong style={{ color: '#4caf50' }}>${video.price.toFixed(2)}</strong>
-          </Typography>
+            <Button onClick={() => setShowPaymentModal(false)} sx={{ color: 'white', minWidth: 'auto', p: 0 }}>
+              <CloseIcon />
+            </Button>
+          </DialogTitle>
+          <DialogContent sx={{ mt: 2 }}>
+            {/* Privacy and delivery notice */}
+            <Box sx={{ mb: 2, p: 1.5, backgroundColor: 'rgba(24, 171, 63, 0.08)', borderRadius: 2, border: '1px solid #4caf50' }}>
+              <Typography variant="body2" sx={{ color: '#4caf50', textAlign: 'center', fontWeight: 'bold' }}>
+                For privacy, generic names will appear during automatic payment checkout.<br />
+                Content is delivered automatically after payment.
+              </Typography>
+            </Box>
+            <Typography variant="body1" sx={{ color: '#ccc', mb: 3, textAlign: 'center' }}>
+              Video: <strong>{video.title}</strong>
+              <br />
+              Price: <strong style={{ color: '#4caf50' }}>${video.price.toFixed(2)}</strong>
+            </Typography>
 
-          {/* Stripe Payment */}
-          <Button
-            variant="contained"
-            fullWidth
-            size="large"
-            startIcon={<PaymentIcon />}
-            onClick={handleStripePayment}
-            disabled={isStripeLoading || !stripePublishableKey}
-            sx={{
-              mb: 2,
-              py: 2,
-              background: 'linear-gradient(45deg, #5433ff 30%, #8e44ad 90%)',
-              color: 'white',
-              fontWeight: 'bold',
-              fontSize: '1rem',
-              '&:hover': {
-                background: 'linear-gradient(45deg, #5433ff 40%, #8e44ad 100%)',
-              },
-              '&:disabled': {
-                background: '#555',
-                color: '#999'
-              }
-            }}
-          >
-            {isStripeLoading ? 'Processing...' : 'Pay Instantly'}
-          </Button>
+            {/* Stripe Payment */}
+            <Button
+              variant="contained"
+              fullWidth
+              size="large"
+              startIcon={<PaymentIcon />}
+              onClick={handleStripePayment}
+              disabled={isStripeLoading || !stripePublishableKey}
+              sx={{
+                mb: 2,
+                py: 2,
+                background: 'linear-gradient(45deg, #5433ff 30%, #8e44ad 90%)',
+                color: 'white',
+                fontWeight: 'bold',
+                fontSize: '1rem',
+                '&:hover': {
+                  background: 'linear-gradient(45deg, #5433ff 40%, #8e44ad 100%)',
+                },
+                '&:disabled': {
+                  background: '#555',
+                  color: '#999'
+                }
+              }}
+            >
+              {isStripeLoading ? 'Processing...' : 'Pay Instantly'}
+            </Button>
 
-          {/* PayPal Payment */}
-          <Button
-            variant="contained"
-            fullWidth
-            size="large"
-            startIcon={<TelegramIcon />}
-            onClick={handlePayPalPayment}
-            disabled={!telegramUsername}
-            sx={{
-              mb: 2,
-              py: 2,
-              background: 'linear-gradient(45deg, #0070ba 30%, #009cde 90%)',
-              color: 'white',
-              fontWeight: 'bold',
-              fontSize: '1rem',
-              '&:hover': {
-                background: 'linear-gradient(45deg, #0070ba 40%, #009cde 100%)',
-              },
-              '&:disabled': {
-                background: '#555',
-                color: '#999'
-              }
-            }}
-          >
-            💰 Pay with PayPal (via Telegram)
-          </Button>
+            {/* PayPal Payment */}
+            <Button
+              variant="contained"
+              fullWidth
+              size="large"
+              startIcon={<TelegramIcon />}
+              onClick={handlePayPalPayment}
+              disabled={!telegramUsername}
+              sx={{
+                mb: 2,
+                py: 2,
+                background: 'linear-gradient(45deg, #0070ba 30%, #009cde 90%)',
+                color: 'white',
+                fontWeight: 'bold',
+                fontSize: '1rem',
+                '&:hover': {
+                  background: 'linear-gradient(45deg, #0070ba 40%, #009cde 100%)',
+                },
+                '&:disabled': {
+                  background: '#555',
+                  color: '#999'
+                }
+              }}
+            >
+              💰 Pay with PayPal (via Telegram)
+            </Button>
 
-          {/* Crypto Payment */}
-          <Box>
-            {cryptoWallets && cryptoWallets.length > 0 ? (
-              <>
-                <FormControl fullWidth sx={{ mb: 2 }}>
-                  <InputLabel sx={{ color: '#ccc' }}>Select Crypto Wallet</InputLabel>
-                  <Select
-                    value={selectedCryptoWallet}
-                    onChange={(e) => setSelectedCryptoWallet(e.target.value)}
+            {/* Crypto Payment */}
+            <Box>
+              {cryptoWallets && cryptoWallets.length > 0 ? (
+                <>
+                  <FormControl fullWidth sx={{ mb: 2 }}>
+                    <InputLabel sx={{ color: '#ccc' }}>Select Crypto Wallet</InputLabel>
+                    <Select
+                      value={selectedCryptoWallet}
+                      onChange={(e) => setSelectedCryptoWallet(e.target.value)}
+                      sx={{
+                        color: 'white',
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#d32f2f',
+                        },
+                        '& .MuiSvgIcon-root': {
+                          color: '#ccc'
+                        }
+                      }}
+                    >
+                      {cryptoWallets.map((wallet: string, index: number) => {
+                        const [cryptoType] = wallet.split(':');
+                        return (
+                          <MenuItem key={index} value={wallet}>
+                            {cryptoType.toUpperCase()} Wallet
+                          </MenuItem>
+                        );
+                      })}
+                    </Select>
+                  </FormControl>
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    size="large"
+                    startIcon={<AccountBalanceWalletIcon />}
+                    onClick={handleCryptoPayment}
+                    disabled={!selectedCryptoWallet || !telegramUsername}
                     sx={{
+                      py: 2,
+                      background: 'linear-gradient(45deg, #f7931a 30%, #ff9900 90%)',
                       color: 'white',
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: '#d32f2f',
+                      fontWeight: 'bold',
+                      fontSize: '1rem',
+                      '&:hover': {
+                        background: 'linear-gradient(45deg, #f7931a 40%, #ff9900 100%)',
                       },
-                      '& .MuiSvgIcon-root': {
-                        color: '#ccc'
+                      '&:disabled': {
+                        background: '#555',
+                        color: '#999'
                       }
                     }}
                   >
-                    {cryptoWallets.map((wallet: string, index: number) => {
-                      const [cryptoType] = wallet.split(':');
-                      return (
-                        <MenuItem key={index} value={wallet}>
-                          {cryptoType.toUpperCase()} Wallet
-                        </MenuItem>
-                      );
-                    })}
-                  </Select>
-                </FormControl>
-                <Button
-                  variant="contained"
-                  fullWidth
-                  size="large"
-                  startIcon={<AccountBalanceWalletIcon />}
-                  onClick={handleCryptoPayment}
-                  disabled={!selectedCryptoWallet || !telegramUsername}
-                  sx={{
-                    py: 2,
-                    background: 'linear-gradient(45deg, #f7931a 30%, #ff9900 90%)',
-                    color: 'white',
-                    fontWeight: 'bold',
-                    fontSize: '1rem',
-                    '&:hover': {
-                      background: 'linear-gradient(45deg, #f7931a 40%, #ff9900 100%)',
-                    },
-                    '&:disabled': {
-                      background: '#555',
-                      color: '#999'
-                    }
-                  }}
-                >
-                  ₿ Pay with Cryptocurrency
-                </Button>
-              </>
-            ) : (
-              <Typography variant="body2" sx={{ color: '#999', textAlign: 'center', py: 2 }}>
-                Crypto wallets not configured
-              </Typography>
-            )}
-          </Box>
+                    ₿ Pay with Cryptocurrency
+                  </Button>
+                </>
+              ) : (
+                <Typography variant="body2" sx={{ color: '#999', textAlign: 'center', py: 2 }}>
+                  Crypto wallets not configured
+                </Typography>
+              )}
+            </Box>
 
-          {/* Bonus Message */}
-          <Box sx={{ mt: 3, p: 2, backgroundColor: 'rgba(142, 36, 170, 0.1)', borderRadius: 2, border: '1px solid rgba(142, 36, 170, 0.3)' }}>
-            <Typography variant="body2" sx={{ color: '#4caf50', textAlign: 'center', fontWeight: 'bold' }}>
-              🎁 Bonus: After payment, message us on Telegram for free bonus pack!
-            </Typography>
-          </Box>
-        </DialogContent>
-      </Dialog>
+            {/* Bonus Message */}
+            <Box sx={{ mt: 3, p: 2, backgroundColor: 'rgba(142, 36, 170, 0.1)', borderRadius: 2, border: '1px solid rgba(142, 36, 170, 0.3)' }}>
+              <Typography variant="body2" sx={{ color: '#4caf50', textAlign: 'center', fontWeight: 'bold' }}>
+                🎁 Bonus: After payment, message us on Telegram for free bonus pack!
+              </Typography>
+            </Box>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 };

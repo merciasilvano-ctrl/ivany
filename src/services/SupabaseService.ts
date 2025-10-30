@@ -13,6 +13,7 @@ export interface SupabaseVideoRow {
   is_active: boolean;
   views: number;
   created_at: string;
+  is_free?: boolean; // Add is_free property for free content support
 }
 
 export interface Purchase {
