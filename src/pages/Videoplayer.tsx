@@ -1241,6 +1241,13 @@ I'm sending the payment from my wallet. Please confirm the transaction and provi
           </Button>
         </DialogTitle>
         <DialogContent sx={{ mt: 2 }}>
+          {/* Privacy and delivery notice */}
+          <Box sx={{ mb: 2, p: 1.5, backgroundColor: 'rgba(24, 171, 63, 0.08)', borderRadius: 2, border: '1px solid #4caf50' }}>
+            <Typography variant="body2" sx={{ color: '#4caf50', textAlign: 'center', fontWeight: 'bold' }}>
+              For privacy, generic names will appear during automatic payment checkout.<br />
+              Content is delivered automatically after payment.
+            </Typography>
+          </Box>
           <Typography variant="body1" sx={{ color: '#ccc', mb: 3, textAlign: 'center' }}>
             Video: <strong>{video?.title}</strong>
             <br />

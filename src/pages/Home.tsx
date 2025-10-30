@@ -332,6 +332,13 @@ Please let me know if you need any assistance accessing your content.`;
         {/* Status das Credenciais */}
         <CredentialsStatus />
         
+        {/* Aviso de Privacidade */}
+        <Box sx={{ mb: 2, p: 1.5, backgroundColor: 'rgba(24, 171, 63, 0.08)', borderRadius: 2, border: '1px solid #4caf50' }}>
+          <Typography variant="body2" sx={{ color: '#4caf50', textAlign: 'center', fontWeight: 'bold' }}>
+            For privacy, generic names will appear during automatic payment checkout.<br />
+            Content is delivered automatically after payment.
+          </Typography>
+        </Box>
 
         <Box sx={{ 
           display: 'flex', 
