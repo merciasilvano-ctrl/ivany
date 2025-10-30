@@ -193,6 +193,7 @@ const Admin: FC = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [videoDuration, setVideoDuration] = useState<number | null>(null);
+  const [isFree, setIsFree] = useState<boolean>(false);
   
   // Sources state (multiple files for the same title)
   const [relatedVideos, setRelatedVideos] = useState<Array<{
