@@ -36,10 +36,10 @@ export interface SessionData {
 
 export interface SiteConfigData {
   siteName: string;
-  paypalClientId: string;
-  paypalMeUsername: string;
+  whoApiKey: string;
   stripePublishableKey: string;
   stripeSecretKey: string;
+  paypalClientId: string;
   telegramUsername: string;
   videoListTitle: string;
   crypto: any[];
@@ -75,8 +75,6 @@ class WasabiMetadataService {
   // Carregar dados do Wasabi
   private async loadDataFromWasabi(): Promise<any> {
     try {
-      console.log('Loading metadata from Wasabi...');
-      
       // Inicializar wasabiService se necessário
       await wasabiService.initialize({
         accessKey: import.meta.env.VITE_WASABI_ACCESS_KEY || '',
@@ -96,7 +94,6 @@ class WasabiMetadataService {
       }
       
       const data = await response.json();
-      console.log('Metadata loaded from Wasabi:', data);
       
       // Atualizar cache
       this.cache = data;
@@ -113,8 +110,7 @@ class WasabiMetadataService {
         sessions: [],
         siteConfig: {
           siteName: 'VideosPlus',
-          paypalClientId: '',
-          paypalMeUsername: '',
+          whoApiKey: '',
           stripePublishableKey: '',
           stripeSecretKey: '',
           telegramUsername: '',
@@ -165,7 +161,7 @@ class WasabiMetadataService {
       const blob = new Blob([jsonData], { type: 'application/json' });
       formData.append('file', blob, 'videosplus-data.json');
       
-      const baseUrl = import.meta.env.DEV ? 'http://localhost:3000' : '';
+      const baseUrl = import.meta.env.DEV ? '' : '';
       const response = await fetch(`${baseUrl}/api/upload/metadata`, {
         method: 'POST',
         body: formData

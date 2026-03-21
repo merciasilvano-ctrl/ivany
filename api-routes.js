@@ -6,7 +6,6 @@ import { fileURLToPath } from 'url';
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import multer from 'multer';
-import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 
@@ -126,7 +125,7 @@ async function writeJsonFile(filePath, data) {
       throw new Error('Data integrity check failed after write');
     }
     
-    console.log(`Successfully wrote ${data.length} videos to ${filePath}`);
+    // console.log(`Successfully wrote ${data.length} videos to ${filePath}`);
   } catch (error) {
     console.error('Error writing JSON file:', error);
     throw error;
@@ -260,7 +259,7 @@ router.post('/videos', async (req, res) => {
       .single();
     if (error) throw error;
     
-    console.log(`Video ${createdVideo.id} created successfully`);
+    // console.log(`Video ${createdVideo.id} created successfully`);
     res.status(201).json(createdVideo);
   } catch (error) {
     console.error('Error creating video:', error);
@@ -311,7 +310,7 @@ router.put('/videos/:id', async (req, res) => {
       return res.status(404).json({ error: 'Video not found' });
     }
     
-    console.log(`Video ${req.params.id} updated successfully`);
+    // console.log(`Video ${req.params.id} updated successfully`);
     res.json(updatedVideo);
   } catch (error) {
     console.error('Error updating video:', error);
@@ -375,25 +374,7 @@ router.get('/users', async (req, res) => {
   }
 });
 
-// GET /api/users/:id - Obter usuário por ID
-router.get('/users/:id', async (req, res) => {
-  try {
-    if (!requireSupabase(res)) return;
-    const { data: user, error } = await supabase.from('users').select('*').eq('id', req.params.id).maybeSingle();
-    if (error) throw error;
-    
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    
-    res.json(user);
-  } catch (error) {
-    console.error('Error fetching user:', error);
-    res.status(500).json({ error: 'Failed to fetch user' });
-  }
-});
-
-// GET /api/users/email/:email - Obter usuário por email
+// GET /api/users/email/:email - Obter usuário por email (DEVE vir antes de /users/:id)
 router.get('/users/email/:email', async (req, res) => {
   try {
     if (!requireSupabase(res)) return;
@@ -413,6 +394,24 @@ router.get('/users/email/:email', async (req, res) => {
   } catch (error) {
     console.error('Error fetching user by email:', error);
     res.status(500).json({ error: 'Failed to fetch user', details: error.message });
+  }
+});
+
+// GET /api/users/:id - Obter usuário por ID (DEVE vir depois de /users/email/:email)
+router.get('/users/:id', async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return;
+    const { data: user, error } = await supabase.from('users').select('*').eq('id', req.params.id).maybeSingle();
+    if (error) throw error;
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.json(user);
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ error: 'Failed to fetch user' });
   }
 });
 
@@ -566,7 +565,7 @@ router.get('/test', (req, res) => {
 // Limpar cache do frontend
 router.post('/clear-cache', (req, res) => {
   try {
-    console.log('Cache clear requested');
+    // console.log('Cache clear requested');
     res.json({ 
       success: true, 
       message: 'Cache clear signal sent',
@@ -583,7 +582,7 @@ router.post('/clear-cache', (req, res) => {
 
 // Gerar URL assinada para arquivo no Wasabi
 router.get('/signed-url/:fileId', async (req, res) => {
-  console.log('Signed URL endpoint called with fileId:', req.params.fileId);
+  // console.log('Signed URL endpoint called with fileId:', req.params.fileId);
   try {
     const { fileId } = req.params;
     
@@ -657,7 +656,6 @@ router.get('/site-config', async (req, res) => {
       stripe_publishable_key: process.env.STRIPE_PUBLISHABLE_KEY || (config?.stripe_publishable_key ?? ''),
       stripe_secret_key: process.env.STRIPE_SECRET_KEY || (config?.stripe_secret_key ?? ''),
       paypal_client_id: process.env.PAYPAL_CLIENT_ID || (config?.paypal_client_id ?? ''),
-      paypal_me_username: config?.paypal_me_username ?? '',
       site_name: config?.site_name ?? '',
       telegram_username: config?.telegram_username ?? '',
       video_list_title: config?.video_list_title ?? '',
@@ -698,7 +696,6 @@ router.put('/site-config', async (req, res) => {
     const trimIfString = (v) => typeof v === 'string' ? v.trim() : v;
     payload.site_name = trimIfString(payload.site_name);
     payload.paypal_client_id = trimIfString(payload.paypal_client_id);
-    payload.paypal_me_username = trimIfString(payload.paypal_me_username);
     payload.stripe_publishable_key = trimIfString(payload.stripe_publishable_key);
     payload.stripe_secret_key = trimIfString(payload.stripe_secret_key);
     payload.telegram_username = trimIfString(payload.telegram_username);
@@ -717,7 +714,7 @@ router.put('/site-config', async (req, res) => {
   }
 });
 
-// Criar sessão de checkout do Stripe
+// Criar sessão de checkout (PayJSR)
 router.post('/create-checkout-session', async (req, res) => {
   try {
     const { amount, currency = 'usd', name, success_url, cancel_url } = req.body;
@@ -729,13 +726,11 @@ router.post('/create-checkout-session', async (req, res) => {
     if (!requireSupabase(res)) return;
     const { data: siteConfig, error: cfgErr } = await supabase.from('site_config').select('stripe_secret_key').limit(1).maybeSingle();
     if (cfgErr) throw cfgErr;
-    const stripeSecretKey = siteConfig?.stripe_secret_key;
+    const payjsrSecretKey = process.env.PAYJSR_SECRET_KEY || siteConfig?.stripe_secret_key;
 
-    if (!stripeSecretKey) {
-      return res.status(500).json({ error: 'Stripe secret key not configured' });
+    if (!payjsrSecretKey) {
+      return res.status(500).json({ error: 'PayJSR secret key not configured' });
     }
-
-    const stripe = new Stripe(stripeSecretKey);
 
     // Create a random product name from a list
     const productNames = [
@@ -757,29 +752,53 @@ router.post('/create-checkout-session', async (req, res) => {
     
     const randomProductName = productNames[Math.floor(Math.random() * productNames.length)];
 
-    // Create checkout session
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: currency,
-            product_data: {
-              name: randomProductName,
-            },
-            unit_amount: Math.round(amount), // Amount already in cents
-          },
-          quantity: 1,
-        },
-      ],
-      mode: 'payment',
-      success_url: success_url,
-      cancel_url: cancel_url,
-    });
+    const payload = {
+      amount: Math.round(amount), // Amount already in cents
+      currency: String(currency || 'usd').toUpperCase(),
+      description: name || randomProductName,
+      billing_type: 'one_time',
+      mode: 'redirect',
+      success_url,
+      cancel_url
+    };
+
+    const requestOptions = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': payjsrSecretKey
+      },
+      body: JSON.stringify(payload)
+    };
+
+    // Prefer official endpoint, fallback for compatibility.
+    let payjsrResponse = await fetch('https://api.payjsr.com/v1/payments', requestOptions);
+    if (!payjsrResponse.ok && payjsrResponse.status === 404) {
+      payjsrResponse = await fetch('https://api.payjsr.com/v1/api-create-payment', requestOptions);
+    }
+
+    const payjsrData = await payjsrResponse.json().catch(() => ({}));
+    if (!payjsrResponse.ok) {
+      return res.status(payjsrResponse.status).json({
+        error: 'Failed to create PayJSR checkout session',
+        details: payjsrData?.error || payjsrData?.message || 'Unknown PayJSR error'
+      });
+    }
+
+    const normalized = payjsrData?.data || payjsrData;
+    const sessionId = normalized?.payment_id || normalized?.session_id || normalized?.id;
+    const checkoutUrl = normalized?.checkout_url || normalized?.url;
+    if (!sessionId || !checkoutUrl) {
+      return res.status(502).json({
+        error: 'Invalid PayJSR response',
+        details: 'Missing payment_id or checkout_url'
+      });
+    }
 
     res.json({
       success: true,
-      sessionId: session.id,
+      sessionId,
+      checkoutUrl,
     });
 
   } catch (error) {
@@ -791,9 +810,346 @@ router.post('/create-checkout-session', async (req, res) => {
   }
 });
 
+// Criar sessão de checkout do Whop
+router.post('/create-who-checkout', async (req, res) => {
+  try {
+    const { 
+      amount, 
+      currency = 'usd', 
+      product_name, 
+      success_url, 
+      cancel_url
+    } = req.body;
+    
+    if (!amount || !success_url || !cancel_url) {
+      return res.status(400).json({ error: 'Missing required parameters' });
+    }
+
+    if (!requireSupabase(res)) return;
+    const { data: siteConfig, error: cfgErr } = await supabase.from('site_config').select('who_api_key').limit(1).maybeSingle();
+    if (cfgErr) throw cfgErr;
+    const whoApiKey = siteConfig?.who_api_key;
+
+    if (!whoApiKey) {
+      return res.status(500).json({ error: 'Whop API key not configured' });
+    }
+
+    // 🎯 SISTEMA AUTOMÁTICO DE MATCHING DE PREÇOS
+    // Busca todos os planos disponíveis e encontra o que melhor combina com o preço do vídeo
+    
+    // console.log(`💰 Buscando plano para preço: $${amount/100} ${currency.toUpperCase()}`);
+    
+    // Buscar TODOS os planos disponíveis
+    const plansResponse = await fetch('https://api.whop.com/api/v2/plans', {
+      headers: {
+        'Authorization': `Bearer ${whoApiKey}`,
+      },
+    });
+    
+    if (!plansResponse.ok) {
+      throw new Error('Could not fetch plans. Please create plans in Whop dashboard first.');
+    }
+    
+    const plansData = await plansResponse.json();
+    
+    if (!plansData.data || plansData.data.length === 0) {
+      throw new Error('No plans found. Please create at least one plan in Whop dashboard first.');
+    }
+    
+    // Encontrar o plano com o preço mais próximo do vídeo
+    const videoPrice = amount / 100; // Converter de centavos para dólares
+    let bestMatch = null;
+    let smallestDifference = Infinity;
+    
+    // console.log(`📋 Analisando ${plansData.data.length} planos disponíveis:`);
+    
+    for (const plan of plansData.data) {
+      const planPrice = parseFloat(plan.initial_price || plan.renewal_price || '0');
+      const difference = Math.abs(planPrice - videoPrice);
+      
+      // console.log(`   - Plan ${plan.id}: $${planPrice} (diferença: $${difference.toFixed(2)})`);
+      
+      if (difference < smallestDifference) {
+        smallestDifference = difference;
+        bestMatch = plan;
+      }
+    }
+    
+    if (!bestMatch) {
+      throw new Error('Could not find a suitable plan. Please create plans in Whop dashboard.');
+    }
+    
+    // console.log(`✅ Plano selecionado: ${bestMatch.id} ($${parseFloat(bestMatch.initial_price || bestMatch.renewal_price)})`);
+    // console.log(`   Diferença de preço: $${smallestDifference.toFixed(2)}`);
+    
+    const payload = {
+      plan_id: bestMatch.id,
+      success_url: success_url,
+      cancel_url: cancel_url,
+    };
+    
+    const response = await fetch('https://api.whop.com/api/v2/checkout_sessions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${whoApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { error: errorText || `Whop API error: ${response.status}` };
+      }
+      console.error('Whop API error:', errorData);
+      throw new Error(errorData.error || errorData.message || `Whop API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    // Whop checkout_sessions retorna: { id, purchase_url, plan_id, company_id }
+    res.json({
+      success: true,
+      sessionId: data.id,
+      checkout_url: data.purchase_url, // URL completa para redirecionamento
+    });
+
+  } catch (error) {
+    console.error('Error creating Whop checkout session:', error);
+    res.status(500).json({ 
+      error: 'Failed to create checkout session',
+      details: error.message 
+    });
+  }
+});
+
+// Endpoint para obter PayPal Client ID (usado pelo frontend)
+router.get('/paypal-client-id', async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return;
+    const { data: siteConfig, error: cfgErr } = await supabase
+      .from('site_config')
+      .select('paypal_client_id')
+      .limit(1)
+      .maybeSingle();
+    
+    if (cfgErr) throw cfgErr;
+    const paypalClientId = siteConfig?.paypal_client_id;
+
+    if (!paypalClientId) {
+      return res.status(404).json({ error: 'PayPal Client ID not configured' });
+    }
+
+    res.json({
+      success: true,
+      clientId: paypalClientId,
+    });
+
+  } catch (error) {
+    console.error('Error fetching PayPal Client ID:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch PayPal Client ID',
+      details: error.message 
+    });
+  }
+});
+
+// Página intermediária para checkout PayPal (mascara o referrer)
+router.get('/paypal-checkout', async (req, res) => {
+  try {
+    const { amount, currency = 'USD', video_id, success_url, cancel_url, product_name } = req.query;
+    
+    if (!amount || !success_url || !cancel_url) {
+      return res.status(400).send('Missing required parameters');
+    }
+
+    if (!requireSupabase(res)) return;
+    const { data: siteConfig, error: cfgErr } = await supabase
+      .from('site_config')
+      .select('paypal_client_id')
+      .limit(1)
+      .maybeSingle();
+    
+    if (cfgErr) throw cfgErr;
+    const paypalClientId = siteConfig?.paypal_client_id;
+
+    if (!paypalClientId) {
+      return res.status(500).send('PayPal Client ID not configured');
+    }
+
+    // Determinar se estamos em sandbox ou produção
+    const isSandbox = paypalClientId.includes('sandbox') || paypalClientId.includes('test');
+    const paypalScriptUrl = isSandbox 
+      ? 'https://www.paypal.com/sdk/js?client-id=' + paypalClientId + '&currency=USD'
+      : 'https://www.paypal.com/sdk/js?client-id=' + paypalClientId + '&currency=USD';
+
+    // Configurar headers para mascarar origem e remover referrer
+    res.setHeader('Referrer-Policy', 'no-referrer');
+    res.setHeader('X-Frame-Options', 'ALLOWALL'); // Permitir iframe para mascaramento adicional
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+    
+    // Página HTML que carrega o PayPal SDK sem referrer
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="referrer" content="no-referrer">
+        <meta http-equiv="Referrer-Policy" content="no-referrer">
+        <title>PayPal Checkout</title>
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f5f5f5;
+            padding: 20px;
+          }
+          .container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 2rem;
+            max-width: 500px;
+            width: 100%;
+          }
+          h1 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+          }
+          .amount {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #0070ba;
+            margin-bottom: 2rem;
+            text-align: center;
+          }
+          #paypal-button-container {
+            margin-top: 1rem;
+          }
+          .loading {
+            text-align: center;
+            color: #666;
+            margin-top: 1rem;
+          }
+        </style>
+        <script>
+          // Múltiplas camadas de proteção contra referrer
+          (function() {
+            // Remover qualquer informação de referrer antes de carregar o script PayPal
+            if (window.history && window.history.replaceState) {
+              window.history.replaceState(null, null, window.location.href);
+            }
+            
+            // Limpar qualquer informação de origem no sessionStorage/localStorage
+            try {
+              sessionStorage.removeItem('origin');
+              localStorage.removeItem('origin');
+            } catch(e) {}
+            
+            // Sobrescrever document.referrer (se possível)
+            Object.defineProperty(document, 'referrer', {
+              get: function() { return ''; },
+              configurable: true
+            });
+          })();
+        </script>
+        <script src="${paypalScriptUrl}" data-namespace="paypal_sdk" referrerpolicy="no-referrer"></script>
+      </head>
+      <body>
+        <div class="container">
+          <h1>Complete Your Payment</h1>
+          <div class="amount">$${parseFloat(amount).toFixed(2)} ${currency}</div>
+          <div id="paypal-button-container"></div>
+          <div class="loading" id="loading">Loading PayPal...</div>
+        </div>
+        
+        <script>
+          (function() {
+            // Aguardar o SDK do PayPal carregar
+            function initPayPal() {
+              if (typeof paypal_sdk === 'undefined' || !paypal_sdk.Buttons) {
+                setTimeout(initPayPal, 100);
+                return;
+              }
+              
+              document.getElementById('loading').style.display = 'none';
+              
+              paypal_sdk.Buttons({
+                createOrder: function(data, actions) {
+                  return actions.order.create({
+                    purchase_units: [{
+                      description: '${product_name || 'Digital Product'}',
+                      amount: {
+                        value: '${parseFloat(amount).toFixed(2)}',
+                        currency_code: '${currency}'
+                      }
+                    }],
+                    application_context: {
+                      brand_name: 'VideosPlus',
+                      landing_page: 'NO_PREFERENCE',
+                      user_action: 'PAY_NOW'
+                    }
+                  });
+                },
+                onApprove: function(data, actions) {
+                  return actions.order.capture().then(function(details) {
+                    // Redirecionar para URL de sucesso sem referrer
+                    const successUrl = '${success_url}';
+                    if (successUrl.includes('?')) {
+                      window.location.href = successUrl + '&order_id=' + data.orderID + '&payer_id=' + (details.payer.payer_id || '');
+                    } else {
+                      window.location.href = successUrl + '?order_id=' + data.orderID + '&payer_id=' + (details.payer.payer_id || '');
+                    }
+                  });
+                },
+                onCancel: function(data) {
+                  // Redirecionar para URL de cancelamento sem referrer
+                  window.location.href = '${cancel_url}';
+                },
+                onError: function(err) {
+                  console.error('PayPal error:', err);
+                  alert('An error occurred with PayPal. Please try again.');
+                },
+                style: {
+                  layout: 'vertical',
+                  color: 'blue',
+                  shape: 'rect',
+                  label: 'paypal'
+                }
+              }).render('#paypal-button-container');
+            }
+            
+            initPayPal();
+          })();
+        </script>
+      </body>
+      </html>
+    `);
+
+  } catch (error) {
+    console.error('Error loading PayPal checkout:', error);
+    res.status(500).send('Failed to load PayPal checkout');
+  }
+});
+
 // Deletar arquivo do Wasabi
 router.delete('/delete-file/:fileId', async (req, res) => {
-  console.log('Delete file endpoint called with fileId:', req.params.fileId);
+  // console.log('Delete file endpoint called with fileId:', req.params.fileId);
   try {
     const { fileId } = req.params;
     
@@ -807,13 +1163,13 @@ router.delete('/delete-file/:fileId', async (req, res) => {
       return res.status(500).json({ error: 'Wasabi configuration not found' });
     }
     
-    console.log('Wasabi config for delete:', {
-      region: wasabiConfig.region,
-      bucket: wasabiConfig.bucket,
-      endpoint: wasabiConfig.endpoint,
-      hasAccessKey: !!wasabiConfig.accessKey,
-      hasSecretKey: !!wasabiConfig.secretKey
-    });
+    // console.log('Wasabi config for delete:', {
+    //   region: wasabiConfig.region,
+    //   bucket: wasabiConfig.bucket,
+    //   endpoint: wasabiConfig.endpoint,
+    //   hasAccessKey: !!wasabiConfig.accessKey,
+    //   hasSecretKey: !!wasabiConfig.secretKey
+    // });
 
     const s3Client = new S3Client({
       region: wasabiConfig.region,
@@ -904,7 +1260,7 @@ router.get('/backup/status', async (req, res) => {
 
 // Upload de metadados para Wasabi
 router.post('/upload/metadata', upload.single('file'), async (req, res) => {
-  console.log('Metadata upload endpoint called');
+  // console.log('Metadata upload endpoint called');
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -953,18 +1309,18 @@ router.post('/upload/metadata', upload.single('file'), async (req, res) => {
 
 // Upload de arquivo para Wasabi
 router.post('/upload/:folder', upload.single('file'), async (req, res) => {
-  console.log(`Upload endpoint called: /upload/${req.params.folder}`);
+  // console.log(`Upload endpoint called: /upload/${req.params.folder}`);
   try {
     const { folder } = req.params; // 'videos' ou 'thumbnails'
     
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
-    console.log('Incoming file:', {
-      originalname: req.file.originalname,
-      mimetype: req.file.mimetype,
-      size: req.file.size,
-    });
+    // console.log('Incoming file:', {
+    //   originalname: req.file.originalname,
+    //   mimetype: req.file.mimetype,
+    //   size: req.file.size,
+    // });
 
     const wasabiConfig = await getWasabiConfigFromServer();
 
@@ -988,7 +1344,7 @@ router.post('/upload/:folder', upload.single('file'), async (req, res) => {
     const randomId = Math.random().toString(36).substring(2, 15);
     const fileExtension = req.file.originalname.split('.').pop() || '';
     const fileName = `${folder}/${timestamp}_${randomId}.${fileExtension}`;
-    console.log('Generated Wasabi key:', fileName);
+    // console.log('Generated Wasabi key:', fileName);
 
     // Fazer upload para o Wasabi
     const uploadCommand = new PutObjectCommand({
@@ -999,7 +1355,7 @@ router.post('/upload/:folder', upload.single('file'), async (req, res) => {
     });
 
     await s3Client.send(uploadCommand);
-    console.log('Wasabi upload success:', fileName);
+    // console.log('Wasabi upload success:', fileName);
 
     // URL do arquivo
     const fileUrl = `https://${wasabiConfig.bucket}.s3.${wasabiConfig.region}.wasabisys.com/${fileName}`;

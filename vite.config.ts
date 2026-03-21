@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => {
       // Configure a middleware for handling API requests during development
       proxy: {
         '/api': {
-          target: 'http://localhost:3000', // Servidor Express API local
+          target: `http://localhost:${env.PORT || 3000}`, // Mesmo PORT do server.js (.env ou 3000)
           changeOrigin: true,
           secure: false,
           configure: (proxy, _options) => {

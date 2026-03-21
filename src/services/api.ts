@@ -11,7 +11,7 @@ const isDev = import.meta.env.DEV;
 // Função para detectar automaticamente a URL da API baseada no domínio atual
 const getApiBaseUrl = () => {
   if (isDev) {
-    return 'http://localhost:3000';
+    return ''; // URL relativa: pedidos vão para o mesmo origin e o Vite faz proxy para o backend
   }
   
   // Se VITE_API_URL estiver configurado, use ele
@@ -42,7 +42,7 @@ export const getStripeSecretKey = async (): Promise<string> => {
 };
 
 /**
- * Create a Stripe checkout session
+ * Create a PayJSR checkout session
  */
 export const createStripeCheckoutSession = async (
   amount: number, 
@@ -50,8 +50,8 @@ export const createStripeCheckoutSession = async (
   productName: string,
   successUrl: string,
   cancelUrl: string
-): Promise<{sessionId: string}> => {
-  console.log('Creating Stripe checkout session:', {
+): Promise<{ sessionId: string; checkoutUrl: string }> => {
+  console.log('Creating PayJSR checkout session:', {
     amount: Math.round(amount * 100),
     currency,
     name: productName,
@@ -79,14 +79,37 @@ export const createStripeCheckoutSession = async (
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    console.error('Failed to create checkout session:', {
+    console.error('Failed to create PayJSR checkout session:', {
       status: response.status,
       statusText: response.statusText,
       errorData,
       url: fullUrl
     });
-    throw new Error(`Failed to create checkout session: ${response.status} ${response.statusText}`);
+    throw new Error(`Failed to create PayJSR checkout session: ${response.status} ${response.statusText}`);
   }
 
   return response.json();
+};
+
+/**
+ * Get PayPal Client ID from API
+ */
+export const getPayPalClientId = async (): Promise<string> => {
+  const fullUrl = `${API_BASE_URL}/api/paypal-client-id`;
+  
+  const response = await fetch(fullUrl);
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    console.error('Failed to get PayPal Client ID:', {
+      status: response.status,
+      statusText: response.statusText,
+      errorData,
+      url: fullUrl
+    });
+    throw new Error(`Failed to get PayPal Client ID: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data.clientId;
 }; 

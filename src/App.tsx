@@ -13,6 +13,10 @@ import Videoplayer from './pages/Videoplayer';
 import Admin from './pages/Admin';
 import Home from './pages/Home';
 import PaymentSuccess from './pages/PaymentSuccess';
+import FAQ from './pages/FAQ';
+import About from './pages/About';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
@@ -22,15 +26,13 @@ import PaymentNotifications from './components/PaymentNotifications';
 import PrivacyNotice from './components/PrivacyNotice';
 import ScrollToTop from './components/ScrollToTop';
 import CustomAnalytics from './components/CustomAnalytics';
-import AgeVerificationModal from './components/AgeVerificationModal';
 
 // Componente AppContent para usar hooks que dependem do Router
 const AppContent: FC = () => {
   const { siteName, loading } = useSiteConfig();
   const [showSplash, setShowSplash] = useState(false);
-  const [showAgeVerification, setShowAgeVerification] = useState(true);
   const location = useLocation();
-  const enableSplash = false; // feature-flag: disable splash without removing code
+  const enableSplash = false; // feature-flag: disable splash animation
   
   // Atualizar o título da página quando o siteName mudar
   useEffect(() => {
@@ -39,39 +41,17 @@ const AppContent: FC = () => {
     }
   }, [siteName, location]);
 
-  // Verificar se estamos na rota inicial e configurar a exibição da animação
+  // Exibir a animação somente na primeira visita à página inicial
   useEffect(() => {
     if (!enableSplash) return;
-    // Verificar se é a primeira visita à página inicial
     const isFirstVisit = !sessionStorage.getItem('visited');
-    
-    // Se estamos na rota inicial e é a primeira visita, mostrar a animação
-    if (location.pathname === '/') {
-      if (isFirstVisit) {
-        setShowSplash(true);
-        // Marcar que já visitou o site
-        sessionStorage.setItem('visited', 'true');
-      } else {
-        // Se o usuário recarregar a página inicial, mostrar a animação novamente
-        const isPageReload = !sessionStorage.getItem('currentSession');
-        
-        if (isPageReload) {
-          setShowSplash(true);
-          // Criar uma nova sessão
-          sessionStorage.setItem('currentSession', Date.now().toString());
-        }
-      }
+
+    if (location.pathname === '/' && isFirstVisit) {
+      setShowSplash(true);
+      sessionStorage.setItem('visited', 'true');
     } else {
-      // Se não estamos na rota inicial, não mostrar a animação
       setShowSplash(false);
     }
-    
-    // Limpar a sessão atual quando o componente for desmontado
-    return () => {
-      if (location.pathname !== '/') {
-        sessionStorage.removeItem('currentSession');
-      }
-    };
   }, [location.pathname, enableSplash]);
 
   // Função para marcar que a animação foi concluída
@@ -79,24 +59,12 @@ const AppContent: FC = () => {
     setShowSplash(false);
   };
 
-  // Função para confirmar idade
-  const handleAgeConfirm = () => {
-    setShowAgeVerification(false);
-  };
-
-  // Função para rejeitar acesso
-  const handleAgeReject = () => {
-    // Redirecionar para uma página de bloqueio ou fechar o site
-    window.location.href = 'https://www.google.com';
-  };
-  
   return (
     <Box sx={{ 
       display: 'flex',
       flexDirection: 'column',
       minHeight: '100vh',
     }}>
-      <AgeVerificationModal open={showAgeVerification} onConfirm={handleAgeConfirm} onReject={handleAgeReject} />
       {enableSplash && showSplash && <SplashAnimation onAnimationComplete={handleAnimationComplete} />}
       <PrivacyNotice />
       <PaymentNotifications />
@@ -118,6 +86,12 @@ const AppContent: FC = () => {
           
           {/* Payment Success */}
           <Route path="/payment-success" element={<PaymentSuccess />} />
+          
+          {/* Info Pages */}
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
           
           {/* Admin area (protected) */}
           <Route 

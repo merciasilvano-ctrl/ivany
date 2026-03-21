@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { FC } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Container from '@mui/material/Container';
@@ -75,10 +75,9 @@ const VideoPage: FC = () => {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [purchaseLoading, setPurchaseLoading] = useState(false);
-  const [purchaseError, setPurchaseError] = useState<string | null>(null);
   const [hasPurchased, setHasPurchased] = useState(false);
-  const [purchaseComplete, setPurchaseComplete] = useState(false);
+  const videoBoxRef = useRef<HTMLDivElement | null>(null);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     const loadVideo = async () => {
@@ -125,41 +124,6 @@ const VideoPage: FC = () => {
 
     loadVideo();
   }, [id, user]);
-
-  const handlePurchase = async () => {
-    if (!user) {
-      // Redirect to login if not logged in
-      navigate('/login', { state: { from: `/video/${id}` } });
-      return;
-    }
-
-    if (!video) {
-      setPurchaseError('Video information not available');
-      return;
-    }
-
-    try {
-      setPurchaseLoading(true);
-      setPurchaseError(null);
-
-      // Simulação de processamento de compra
-      setTimeout(() => {
-        setPurchaseComplete(true);
-        setHasPurchased(true);
-        
-        // Get video streaming URL after purchase
-        VideoService.getVideoFileUrl(id!)
-          .then(url => setVideoUrl(url))
-          .catch(err => console.error('Error getting video URL:', err));
-        
-        setPurchaseLoading(false);
-      }, 1500);
-    } catch (err) {
-      console.error('Purchase error:', err);
-      setPurchaseError('Failed to complete purchase. Please try again.');
-      setPurchaseLoading(false);
-    }
-  };
 
   // Format the duration nicely
   const formatDuration = (duration?: string | number) => {
@@ -264,6 +228,15 @@ Please let me know how to proceed with payment.`;
     );
   }
 
+  useEffect(() => {
+    if (!videoBoxRef.current || isReady) return;
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) setIsReady(true); });
+    }, { threshold: 0.2 });
+    obs.observe(videoBoxRef.current);
+    return () => obs.disconnect();
+  }, [isReady]);
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Button 
@@ -273,31 +246,18 @@ Please let me know how to proceed with payment.`;
       >
         Back to videos
       </Button>
-      
-      {purchaseComplete && (
-        <Alert severity="success" sx={{ mb: 3 }}>
-          Purchase successful! You can now watch this video.
-        </Alert>
-      )}
-      
-      {purchaseError && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {purchaseError}
-        </Alert>
-      )}
-      
       <Paper elevation={3} sx={{ p: 3 }}>
         <Typography variant="h4" component="h1" gutterBottom>
           {video?.title || 'Video Details'}
         </Typography>
         
         <Grid container spacing={3}>
-          <Grid item xs={12} md={hasPurchased && videoUrl ? 12 : 6}>
-            {hasPurchased && videoUrl ? (
-              <Box sx={{ position: 'relative', width: '100%', pt: '56.25%', mb: 2 }}>
+          <Grid item xs={12} md={videoUrl ? 12 : 6}>
+            {videoUrl ? (
+              <Box ref={videoBoxRef} sx={{ position: 'relative', width: '100%', pt: '56.25%', mb: 2 }}>
                 <video
                   controls
-                  autoPlay
+                  preload="none"
                   style={{
                     position: 'absolute',
                     top: 0,
@@ -305,9 +265,10 @@ Please let me know how to proceed with payment.`;
                     width: '100%',
                     height: '100%',
                     objectFit: 'contain',
-                    backgroundColor: '#000'
+                    backgroundColor: '#020617'
                   }}
-                  src={videoUrl}
+                  src={isReady ? videoUrl : undefined}
+                  poster={video?.thumbnailUrl}
                 >
                   Your browser does not support the video tag.
                 </video>
@@ -316,6 +277,7 @@ Please let me know how to proceed with payment.`;
               <Card>
                 <CardMedia
                   component="img"
+                  loading="lazy"
                   image={video?.thumbnailUrl || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM5OTk5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5WaWRlbyBUaHVtYm5haWw8L3RleHQ+PC9zdmc+'}
                   alt={video?.title}
                   sx={{ height: 300, objectFit: 'cover' }}
@@ -324,7 +286,7 @@ Please let me know how to proceed with payment.`;
             )}
           </Grid>
           
-          {(!hasPurchased || !videoUrl) && (
+          {!videoUrl && (
             <Grid item xs={12} md={6}>
               <Typography variant="h6" gutterBottom>
                 Video Information
@@ -357,46 +319,19 @@ Please let me know how to proceed with payment.`;
                   ${video?.price.toFixed(2)}
                 </Typography>
               </Box>
-              
-              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+
+              {telegramUsername && (
                 <Button
                   variant="contained"
+                  color="primary"
                   fullWidth
-                  startIcon={<ShoppingCartCheckoutIcon />}
-                  onClick={handlePurchase}
-                  disabled={purchaseLoading || hasPurchased || !user}
+                  startIcon={<TelegramIcon />}
+                  href={telegramHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  {purchaseLoading ? (
-                    <>
-                      <CircularProgress size={24} color="inherit" sx={{ mr: 1 }} />
-                      Processing...
-                    </>
-                  ) : hasPurchased ? (
-                    'Already Purchased'
-                  ) : (
-                    'Purchase Now'
-                  )}
+                  Contact on Telegram to buy
                 </Button>
-                
-                {telegramUsername && (
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    fullWidth
-                    startIcon={<TelegramIcon />}
-                    href={telegramHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Contact on Telegram
-                  </Button>
-                )}
-              </Box>
-              
-              {!user && (
-                <Alert severity="info" sx={{ mt: 2 }}>
-                  Please log in to purchase this video.
-                </Alert>
               )}
             </Grid>
           )}

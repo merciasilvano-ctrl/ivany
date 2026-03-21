@@ -118,10 +118,6 @@ const FeaturedBanner = ({ onError }: FeaturedBannerProps) => {
 
   // Temporarily disabled
   return null;
-  
-  if (loading || !featuredVideo) {
-    return null; // Or a skeleton loader
-  }
 
   // Extract only what we need from the description (first 150 characters)
   const truncatedDescription = featuredVideo.description.length > 150 
@@ -157,7 +153,7 @@ const FeaturedBanner = ({ onError }: FeaturedBannerProps) => {
           gap: 1,
         }}
       >
-        <WarningIcon sx={{ color: '#FF0F50' }} />
+        <WarningIcon sx={{ color: theme => theme.palette.primary.main }} />
         <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
           18+ ADULT CONTENT • By continuing, you confirm you are at least 18 years old
         </Typography>
@@ -169,7 +165,7 @@ const FeaturedBanner = ({ onError }: FeaturedBannerProps) => {
           position: 'absolute',
           top: 0,
           right: 0,
-          backgroundColor: 'rgba(255, 15, 80, 0.9)',
+          backgroundColor: theme => theme.palette.primary.main,
           color: 'white',
           padding: '8px 12px',
           zIndex: 3,
@@ -249,7 +245,7 @@ const FeaturedBanner = ({ onError }: FeaturedBannerProps) => {
           sx={{ 
             mb: 2, 
             fontWeight: 'bold', 
-            backgroundColor: '#FF0F50',
+            backgroundColor: theme => theme.palette.primary.main,
             '& .MuiChip-label': { px: 1, py: 0.5 }
           }} 
         />
@@ -289,7 +285,7 @@ const FeaturedBanner = ({ onError }: FeaturedBannerProps) => {
             size="large"
             startIcon={<PlayArrowIcon />}
             sx={{
-              bgcolor: '#FF0F50',
+              bgcolor: theme => theme.palette.primary.main,
               color: 'white',
               fontWeight: 'bold',
               '&:hover': {
@@ -334,8 +330,8 @@ const FeaturedBanner = ({ onError }: FeaturedBannerProps) => {
               color: 'white', 
               fontWeight: 'bold',
               display: 'inline-block',
-              border: '1px solid #FF0F50',
-              bgcolor: 'rgba(255, 15, 80, 0.2)',
+              border: theme => `1px solid ${theme.palette.primary.main}`,
+              bgcolor: theme => (theme.palette.mode === 'dark' ? 'rgba(13,71,161,0.18)' : 'rgba(13,71,161,0.10)'),
               px: 1.5,
               py: 0.5,
               borderRadius: '4px',
@@ -349,7 +345,7 @@ const FeaturedBanner = ({ onError }: FeaturedBannerProps) => {
             display: 'flex',
             alignItems: 'center',
             gap: 1,
-            backgroundColor: 'rgba(255, 15, 80, 0.9)',
+            backgroundColor: theme => theme.palette.primary.main,
             px: 2,
             py: 1,
             borderRadius: '8px',

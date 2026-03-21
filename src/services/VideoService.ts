@@ -102,7 +102,6 @@ export class VideoService {
   // Get only video IDs (fast operation without metadata)
   static async getVideoIds(sortOption: SortOption = SortOption.NEWEST): Promise<string[]> {
     try {
-      console.log('Getting video IDs only (fast operation)');
       const rows = await SupabaseService.listVideos();
       const videos = rows.map(row => ({
         $id: row.id,
@@ -227,7 +226,6 @@ export class VideoService {
   // Get a single video by ID (optimized for fast loading)
   static async getVideo(videoId: string): Promise<Video | null> {
     try {
-      console.log(`Getting video ${videoId} from Supabase`);
       const row = await SupabaseService.getVideo(videoId);
       if (!row) return null;
       const video: Video = {
@@ -264,8 +262,6 @@ export class VideoService {
         wasabiService.getThumbnailUrl(thumbnailId)
           .then(url => {
             video.thumbnailUrl = url;
-            // Trigger a re-render if needed (optional)
-            console.log(`Thumbnail loaded for video ${video.$id}`);
           })
           .catch(error => {
           console.error(`Error getting thumbnail for video ${video.$id}:`, error);
@@ -279,7 +275,6 @@ export class VideoService {
         video.thumbnailUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTk5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5WaWRlbyBUaHVtYm5haWw8L3RleHQ+PC9zdmc+';
       }
       
-      console.log(`Video ${videoId} loaded successfully`);
       return video;
     } catch (error) {
       console.error(`Error getting video ${videoId}:`, error);
@@ -328,8 +323,6 @@ export class VideoService {
   // Get video file URL for streaming
   static async getVideoFileUrl(videoId: string): Promise<string | null> {
     try {
-      console.log(`Getting video file URL for video ${videoId}`);
-      
       // Get video details first
       const video = await this.getVideo(videoId);
       if (!video) {
@@ -345,12 +338,9 @@ export class VideoService {
         return null;
       }
       
-      console.log(`Attempting to get file URL for video ID: ${videoFileId}`);
-      
       // Get video file URL
       try {
         const fileUrl = await wasabiService.getFileUrl(videoFileId);
-        console.log(`Video URL obtained: ${fileUrl}`);
         return fileUrl;
       } catch (error) {
         console.error(`Error getting file URL:`, error);

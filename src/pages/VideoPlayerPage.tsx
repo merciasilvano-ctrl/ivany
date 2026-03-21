@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { FC } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Container from '@mui/material/Container';
@@ -20,6 +20,8 @@ const VideoPlayerPage: FC = () => {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     const loadVideo = async () => {
@@ -95,6 +97,15 @@ const VideoPlayerPage: FC = () => {
     );
   }
 
+  useEffect(() => {
+    if (!containerRef.current || isReady) return;
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) setIsReady(true); });
+    }, { threshold: 0.2 });
+    obs.observe(containerRef.current);
+    return () => obs.disconnect();
+  }, [isReady]);
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Button 
@@ -110,11 +121,11 @@ const VideoPlayerPage: FC = () => {
           {video.title}
         </Typography>
         
-        <Box sx={{ position: 'relative', width: '100%', pt: '56.25%', mb: 2 }}>
+        <Box ref={containerRef} sx={{ position: 'relative', width: '100%', pt: '56.25%', mb: 2 }}>
           {videoUrl && (
             <video
               controls
-              autoPlay
+              preload="none"
               style={{
                 position: 'absolute',
                 top: 0,
@@ -122,9 +133,10 @@ const VideoPlayerPage: FC = () => {
                 width: '100%',
                 height: '100%',
                 objectFit: 'contain',
-                backgroundColor: '#000'
+                backgroundColor: '#020617'
               }}
-              src={videoUrl}
+              src={isReady ? videoUrl : undefined}
+              poster={video?.thumbnailUrl}
             >
               Your browser does not support the video tag.
             </video>

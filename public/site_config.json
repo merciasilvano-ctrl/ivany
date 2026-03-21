@@ -1,7 +1,6 @@
 {
   "siteName": "VideosPlus",
   "paypalClientId": "",
-  "paypalMeUsername": "",
   "stripePublishableKey": "",
   "stripeSecretKey": "",
   "telegramUsername": "",

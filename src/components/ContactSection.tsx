@@ -47,7 +47,7 @@ const ContactSection: FC = () => {
               py: 1.5,
               fontSize: '1.1rem',
               fontWeight: 600,
-              boxShadow: `0 8px 25px ${theme.palette.mode === 'dark' ? 'rgba(255, 15, 80, 0.25)' : 'rgba(209, 13, 66, 0.25)'}`,
+              boxShadow: theme => `0 8px 25px ${theme.palette.mode === 'dark' ? 'rgba(13, 71, 161, 0.25)' : 'rgba(13, 71, 161, 0.18)'}`,
               '&:hover': {
                 transform: 'translateY(-2px)'
               },

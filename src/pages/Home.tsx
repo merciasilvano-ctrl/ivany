@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { FC } from 'react';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
@@ -28,6 +28,8 @@ import PromoOfferBanner from '../components/PromoOfferBanner';
 import DatabaseSetupModal from '../components/DatabaseSetupModal';
 import CredentialsStatus from '../components/CredentialsStatus';
 import ContactSection from '../components/ContactSection';
+import TrustBadges from '../components/TrustBadges';
+// Testimonials removido a pedido
 
 // Skeleton card component for loading state
 const VideoCardSkeleton: FC = () => {
@@ -134,11 +136,28 @@ const Home: FC = () => {
   const [sectionOnlineNow, setSectionOnlineNow] = useState<number>(() => Math.floor(Math.random() * 101));
   const [sectionHappyCustomers] = useState<number>(() => Math.floor(Math.random() * (1300 - 700 + 1)) + 700);
   const [sectionRating] = useState<number>(() => parseFloat((Math.random() * 0.6 + 4.2).toFixed(1)));
+  const [showCancelMessage, setShowCancelMessage] = useState(false);
   
   const { user } = useAuth();
   const { videoListTitle, telegramUsername } = useSiteConfig();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const videosPerPage = 24; // Aumentar de 12 para 24 vídeos por página
+
+  // Detectar se o pagamento foi cancelado
+  useEffect(() => {
+    const paymentCanceled = searchParams.get('payment_canceled');
+    if (paymentCanceled === 'true') {
+      setShowCancelMessage(true);
+      console.log('✅ REDIRECIONAMENTO WHOP FUNCIONANDO! (Promo Banner) URL contém: payment_canceled=true');
+      // Limpar o parâmetro da URL após 8 segundos
+      setTimeout(() => {
+        setShowCancelMessage(false);
+        searchParams.delete('payment_canceled');
+        setSearchParams(searchParams);
+      }, 8000);
+    }
+  }, [searchParams, setSearchParams]);
 
   // Check for Stripe payment success on component mount
   useEffect(() => {
@@ -310,7 +329,12 @@ Please let me know if you need any assistance accessing your content.`;
   
 
   return (
-    <Box sx={{ width: '100%' }}>
+    <Box sx={{ 
+      width: '100%',
+      background: theme => theme.palette.mode === 'dark'
+        ? 'linear-gradient(180deg, #020617 0%, #020c2a 100%)'
+        : 'linear-gradient(180deg, rgba(250,250,252,1) 0%, rgba(255,255,255,1) 100%)'
+    }}>
       {/* Add CSS animation for pulse effect */}
       <style>
         {`
@@ -322,115 +346,60 @@ Please let me know if you need any assistance accessing your content.`;
         `}
       </style>
       
-      {/* Promoção especial */}
-      <PromoOfferBanner telegramUsername={telegramUsername} />
-
       {/* Banner de destaque */}
       <FeaturedBanner onError={handleBannerError} />
       
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: 3 }}>
+        {/* Mensagem de cancelamento de pagamento com texto mais simples e menos técnico */}
+        {showCancelMessage && (
+          <Alert 
+            severity="info" 
+            sx={{ mb: 3 }}
+            onClose={() => setShowCancelMessage(false)}
+          >
+            <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
+              Payment cancelled
+            </Typography>
+            <Typography variant="body2">
+              Your payment was cancelled. No charges were made and you can continue browsing the content normally.
+            </Typography>
+          </Alert>
+        )}
+
         {/* Status das Credenciais */}
         <CredentialsStatus />
-        
-        {/* Aviso de Privacidade */}
-        <Box sx={{ mb: 2, p: 1.5, backgroundColor: 'rgba(24, 171, 63, 0.08)', borderRadius: 2, border: '1px solid #4caf50' }}>
-          <Typography variant="body2" sx={{ color: '#4caf50', textAlign: 'center', fontWeight: 'bold' }}>
-            For privacy, generic names will appear during automatic payment checkout.<br />
-            Content is delivered automatically after payment.
-          </Typography>
-        </Box>
 
         <Box sx={{ 
           display: 'flex', 
           flexDirection: { xs: 'column', md: 'row' }, 
           justifyContent: 'space-between',
           alignItems: { xs: 'stretch', md: 'center' },
-          mb: 3
+          mb: 3,
+          mt: 2,
+          p: 2,
+          borderRadius: 2,
+          background: theme => theme.palette.mode === 'dark'
+            ? 'rgba(255,255,255,0.02)'
+            : 'rgba(0,0,0,0.02)',
+          border: theme => `1px solid ${theme.palette.divider}`
         }}>
           <Box>
-            <Typography variant="h4" component="h2" gutterBottom>
+            <Typography 
+              variant="h4" 
+              component="h2" 
+              gutterBottom
+              sx={{
+                fontWeight: 800,
+                background: theme => theme.palette.mode === 'dark'
+                  ? 'linear-gradient(90deg, #fff 0%, #aaa 100%)'
+                  : 'linear-gradient(90deg, #000 0%, #555 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
               {videoListTitle || 'Featured Videos'}
             </Typography>
-            {!loading && videos.length > 0 && (
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 1, alignItems: 'center' }}>
-                <Chip 
-                  label={`From $${Math.min(...videos.map(v => v.price)).toFixed(2)}`}
-                  size="small"
-                  sx={{ 
-                    backgroundColor: 'rgba(255, 15, 80, 0.1)',
-                    color: '#FF0F50',
-                    fontWeight: 'bold',
-                    border: '1px solid rgba(255, 15, 80, 0.3)'
-                  }}
-                />
-                <Chip 
-                  label={`${sectionHappyCustomers}+ Happy Customers`}
-                  size="small"
-                  sx={{ 
-                    backgroundColor: 'rgba(76, 175, 80, 0.12)',
-                    color: '#2E7D32',
-                    fontWeight: 'bold',
-                    border: '1px solid rgba(76, 175, 80, 0.35)'
-                  }}
-                />
-                <Chip 
-                  label={`⭐ ${sectionRating}/5 Rating`}
-                  size="small"
-                  sx={{ 
-                    backgroundColor: 'rgba(255, 193, 7, 0.12)',
-                    color: '#B28704',
-                    fontWeight: 'bold',
-                    border: '1px solid rgba(255, 193, 7, 0.35)'
-                  }}
-                />
-                <Chip 
-                  label={`${sectionOnlineNow} online`}
-                  size="small"
-                  sx={{ 
-                    backgroundColor: 'rgba(244, 67, 54, 0.12)',
-                    color: '#D32F2F',
-                    fontWeight: 'bold',
-                    border: '1px solid rgba(244, 67, 54, 0.35)'
-                  }}
-                  icon={<span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ff4d4f', display: 'inline-block', boxShadow: '0 0 0 2px rgba(255,77,79,0.2)' }} />}
-                />
-                <Chip 
-                  label={`Up to $${Math.max(...videos.map(v => v.price)).toFixed(2)}`}
-                  size="small"
-                  sx={{ 
-                    backgroundColor: 'rgba(255, 15, 80, 0.1)',
-                    color: '#FF0F50',
-                    fontWeight: 'bold',
-                    border: '1px solid rgba(255, 15, 80, 0.3)'
-                  }}
-                />
-                <Chip 
-                  label={`Avg: $${(videos.reduce((sum, v) => sum + v.price, 0) / videos.length).toFixed(2)}`}
-                  size="small"
-                  sx={{ 
-                    backgroundColor: 'rgba(255, 15, 80, 0.1)',
-                    color: '#FF0F50',
-                    fontWeight: 'bold',
-                    border: '1px solid rgba(255, 15, 80, 0.3)'
-                  }}
-                />
-                
-                {/* Loading progress indicator */}
-                {isLoadingMore && loadedVideos.length < videos.length && (
-                  <Chip 
-                    label={`Loading ${loadedVideos.length}/${videos.length} videos...`}
-                    size="small"
-                    sx={{ 
-                      backgroundColor: 'rgba(33, 150, 243, 0.1)',
-                      color: '#2196F3',
-                      fontWeight: 'bold',
-                      border: '1px solid rgba(33, 150, 243, 0.3)',
-                      animation: 'pulse 1.5s ease-in-out infinite'
-                    }}
-                  />
-                )}
-              </Box>
-            )}
+            {!loading && videos.length > 0 && null}
           </Box>
           
           <Box sx={{ 
@@ -461,8 +430,8 @@ Please let me know if you need any assistance accessing your content.`;
             <Button 
               component={RouterLink}
               to="/videos"
-              variant="outlined"
-              color="primary"
+              variant="contained"
+              color="secondary"
               endIcon={<ArrowForwardIcon />}
             >
               View All Videos
@@ -512,7 +481,7 @@ Please let me know if you need any assistance accessing your content.`;
               </Grow>
             ) : (
               <>
-                <Grid container spacing={3}>
+                <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }}>
                   {/* Show loaded videos with smooth animation */}
                   {loadedVideos.map((video, index) => (
                     <Grow
@@ -552,9 +521,7 @@ Please let me know if you need any assistance accessing your content.`;
                           '& .MuiPaginationItem-root': {
                             transition: 'all 0.3s ease',
                             '&:hover': {
-                              transform: 'scale(1.1)',
-                              bgcolor: 'primary.main',
-                              color: 'white'
+                              transform: 'scale(1.06)'
                             }
                           }
                         }}
@@ -568,8 +535,9 @@ Please let me know if you need any assistance accessing your content.`;
         </Fade>
       </Container>
       
+      {/* Seções extras simplificadas para manter o foco nos vídeos */}
       <ContactSection />
-      
+
       {/* Modal de setup da base de dados */}
       <DatabaseSetupModal 
         open={setupModalOpen}

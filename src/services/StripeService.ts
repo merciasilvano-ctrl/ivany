@@ -1,18 +1,10 @@
-import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { createStripeCheckoutSession } from './api';
 
-// Helper class for Stripe integration
+// Kept as "StripeService" for backwards compatibility in the UI.
+// Internally this now uses PayJSR checkout URLs.
 export class StripeService {
-  private static stripeInstance: Promise<Stripe | null> | null = null;
-
-  /**
-   * Initialize Stripe with the given publishable key
-   */
-  static initStripe(stripePublishableKey: string): Promise<Stripe | null> {
-    if (!this.stripeInstance) {
-      this.stripeInstance = loadStripe(stripePublishableKey);
-    }
-    return this.stripeInstance;
+  static async initStripe(_stripePublishableKey?: string): Promise<null> {
+    return null;
   }
 
   /**
@@ -24,7 +16,7 @@ export class StripeService {
     productName: string,
     successUrl: string,
     cancelUrl: string
-  ): Promise<string> {
+  ): Promise<{ sessionId: string; checkoutUrl: string }> {
     try {
       const response = await createStripeCheckoutSession(
         amount,
@@ -33,7 +25,10 @@ export class StripeService {
         successUrl,
         cancelUrl
       );
-      return response.sessionId;
+      return {
+        sessionId: response.sessionId,
+        checkoutUrl: response.checkoutUrl,
+      };
     } catch (error) {
       console.error('Error creating checkout session:', error);
       throw error;
@@ -43,19 +38,10 @@ export class StripeService {
   /**
    * Redirect to Stripe checkout
    */
-  static async redirectToCheckout(sessionId: string): Promise<void> {
-    const stripe = await this.stripeInstance;
-    if (!stripe) {
-      throw new Error('Stripe has not been initialized');
+  static async redirectToCheckout(sessionIdOrCheckoutUrl: string): Promise<void> {
+    if (!sessionIdOrCheckoutUrl) {
+      throw new Error('Invalid checkout URL');
     }
-
-    const { error } = await stripe.redirectToCheckout({
-      sessionId,
-    });
-
-    if (error) {
-      console.error('Error redirecting to checkout:', error);
-      throw error;
-    }
+    window.location.href = sessionIdOrCheckoutUrl;
   }
 } 

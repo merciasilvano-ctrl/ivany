@@ -22,7 +22,7 @@ export interface Purchase {
   buyer_email: string;
   buyer_name: string | null;
   transaction_id: string;
-  payment_method: 'paypal' | 'stripe' | 'crypto';
+  payment_method: 'paypal' | 'stripe' | 'crypto' | 'who';
   amount: number;
   currency: string;
   status: 'pending' | 'completed' | 'failed' | 'refunded';

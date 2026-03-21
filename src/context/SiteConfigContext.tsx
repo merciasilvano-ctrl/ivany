@@ -1,15 +1,16 @@
 import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { jsonDatabaseService, SiteConfigData } from '../services/JSONDatabaseService';
+import { jsonDatabaseService } from '../services/JSONDatabaseService';
+import { SiteConfigData } from '../services/WasabiMetadataService';
 import { SupabaseService } from '../services/SupabaseService';
 
 // Define the site config interface - mantém compatibilidade com o frontend
 interface SiteConfig {
   $id: string;
   site_name: string;
-  paypal_client_id: string;
-  paypal_me_username?: string; // For PayPal.me integration
+  who_api_key: string;
   stripe_publishable_key: string;
   stripe_secret_key: string;
+  paypal_client_id?: string;
   telegram_username: string;
   video_list_title?: string;
   crypto?: string[];
@@ -31,10 +32,10 @@ interface SiteConfig {
 // Define the context interface
 interface SiteConfigContextType {
   siteName: string;
-  paypalClientId: string;
-  paypalMeUsername: string; // For PayPal.me integration
+  whoApiKey: string;
   stripePublishableKey: string;
   stripeSecretKey: string;
+  paypalClientId: string;
   telegramUsername: string;
   videoListTitle: string;
   cryptoWallets: string[];
@@ -61,10 +62,10 @@ interface SiteConfigContextType {
 // Create the context with default values
 const SiteConfigContext = createContext<SiteConfigContextType>({
   siteName: 'VideosPlus',
-  paypalClientId: '',
-  paypalMeUsername: '',
+  whoApiKey: '',
   stripePublishableKey: '',
   stripeSecretKey: '',
+  paypalClientId: '',
   telegramUsername: '',
   videoListTitle: 'Available Videos',
   cryptoWallets: [],
@@ -99,10 +100,10 @@ export const SiteConfigProvider = ({ children }: { children: ReactNode }) => {
     return {
       $id: 'site-config', // ID fixo para compatibilidade
       site_name: data.siteName,
-      paypal_client_id: data.paypalClientId,
-      paypal_me_username: data.paypalMeUsername,
+      who_api_key: data.whoApiKey,
       stripe_publishable_key: data.stripePublishableKey,
       stripe_secret_key: data.stripeSecretKey,
+      paypal_client_id: data.paypalClientId,
       telegram_username: data.telegramUsername,
       video_list_title: data.videoListTitle,
       crypto: data.crypto,
@@ -130,10 +131,10 @@ export const SiteConfigProvider = ({ children }: { children: ReactNode }) => {
           if (supa) {
             configData = {
               siteName: supa.site_name || 'VideosPlus',
-              paypalClientId: supa.paypal_client_id || '',
-              paypalMeUsername: supa.paypal_me_username || '',
+              whoApiKey: supa.who_api_key || '',
               stripePublishableKey: supa.stripe_publishable_key || '',
               stripeSecretKey: supa.stripe_secret_key || '',
+              paypalClientId: supa.paypal_client_id || '',
               telegramUsername: supa.telegram_username || '',
               videoListTitle: supa.video_list_title || 'Available Videos',
               crypto: supa.crypto || [],
@@ -161,10 +162,10 @@ export const SiteConfigProvider = ({ children }: { children: ReactNode }) => {
         const defaultConfig: SiteConfig = {
           $id: 'site-config',
           site_name: 'VideosPlus',
-          paypal_client_id: '',
-          paypal_me_username: '',
+          who_api_key: '',
           stripe_publishable_key: '',
           stripe_secret_key: '',
+          paypal_client_id: '',
           telegram_username: '',
           video_list_title: 'Available Videos',
           crypto: [],
@@ -201,10 +202,10 @@ export const SiteConfigProvider = ({ children }: { children: ReactNode }) => {
       if (SupabaseService.isConfigured()) {
         const supaPayload: any = {
           site_name: updates.siteName,
-          paypal_client_id: updates.paypalClientId,
-          paypal_me_username: updates.paypalMeUsername,
+          who_api_key: updates.whoApiKey,
           stripe_publishable_key: updates.stripePublishableKey,
           stripe_secret_key: updates.stripeSecretKey,
+          paypal_client_id: updates.paypalClientId,
           telegram_username: updates.telegramUsername,
           video_list_title: updates.videoListTitle,
           crypto: updates.crypto,
@@ -222,7 +223,28 @@ export const SiteConfigProvider = ({ children }: { children: ReactNode }) => {
         await fetchSiteConfig();
       } else {
       const currentConfig = await jsonDatabaseService.getSiteConfig();
-        const updatedConfig: SiteConfigData = { ...currentConfig, ...updates };
+      if (!currentConfig) {
+        throw new Error('Current site config not found');
+      }
+        const updatedConfig: SiteConfigData = { 
+          ...currentConfig, 
+          ...updates,
+          siteName: updates.siteName ?? currentConfig.siteName,
+          whoApiKey: updates.whoApiKey ?? currentConfig.whoApiKey,
+          stripePublishableKey: updates.stripePublishableKey ?? currentConfig.stripePublishableKey,
+          stripeSecretKey: updates.stripeSecretKey ?? currentConfig.stripeSecretKey,
+          paypalClientId: updates.paypalClientId ?? currentConfig.paypalClientId,
+          telegramUsername: updates.telegramUsername ?? currentConfig.telegramUsername,
+          videoListTitle: updates.videoListTitle ?? currentConfig.videoListTitle,
+          crypto: updates.crypto ?? currentConfig.crypto,
+          emailHost: updates.emailHost ?? currentConfig.emailHost,
+          emailPort: updates.emailPort ?? currentConfig.emailPort,
+          emailSecure: updates.emailSecure ?? currentConfig.emailSecure,
+          emailUser: updates.emailUser ?? currentConfig.emailUser,
+          emailPass: updates.emailPass ?? currentConfig.emailPass,
+          emailFrom: updates.emailFrom ?? currentConfig.emailFrom,
+          wasabiConfig: updates.wasabiConfig ?? currentConfig.wasabiConfig
+        };
       await jsonDatabaseService.updateSiteConfig(updatedConfig);
       const siteConfig = convertToSiteConfig(updatedConfig);
       setConfig(siteConfig);
@@ -245,10 +267,10 @@ export const SiteConfigProvider = ({ children }: { children: ReactNode }) => {
   // Context value
   const value = {
     siteName: config?.site_name || 'VideosPlus',
-    paypalClientId: config?.paypal_client_id || '',
-    paypalMeUsername: config?.paypal_me_username || '',
+    whoApiKey: config?.who_api_key || '',
     stripePublishableKey: config?.stripe_publishable_key || '',
     stripeSecretKey: config?.stripe_secret_key || '',
+    paypalClientId: config?.paypal_client_id || '',
     telegramUsername: config?.telegram_username || '',
     videoListTitle: config?.video_list_title || 'Available Videos',
     cryptoWallets: config?.crypto || [],

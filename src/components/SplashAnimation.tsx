@@ -40,15 +40,15 @@ const SplashAnimation = ({ onAnimationComplete }: SplashAnimationProps) => {
   const { siteName } = useSiteConfig();
 
   useEffect(() => {
-    // Controla os estágios da animação
+    // Controla os estágios da animação (total ~3s)
     const stageTimers = [
-      setTimeout(() => setAnimationStage(1), 1500), // Fade in completo (aumentado)
-      setTimeout(() => setAnimationStage(2), 4000), // Começa a escalar (aumentado)
-      setTimeout(() => setAnimationStage(3), 5500), // Começa a desaparecer (aumentado)
+      setTimeout(() => setAnimationStage(1), 500),
+      setTimeout(() => setAnimationStage(2), 1800),
+      setTimeout(() => setAnimationStage(3), 2400),
       setTimeout(() => {
         setAnimationStage(4);
         onAnimationComplete();
-      }, 7000) // Animação completa (aumentado)
+      }, 3000)
     ];
 
     return () => {
@@ -62,7 +62,7 @@ const SplashAnimation = ({ onAnimationComplete }: SplashAnimationProps) => {
   }
 
   return (
-    <Box
+      <Box
       sx={{
         position: 'fixed',
         top: 0,
@@ -72,7 +72,7 @@ const SplashAnimation = ({ onAnimationComplete }: SplashAnimationProps) => {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'black',
+          backgroundColor: '#ffffff',
         zIndex: 9999,
         opacity: animationStage === 3 ? 0 : 1,
         transition: 'opacity 1.5s ease-out',
@@ -80,8 +80,8 @@ const SplashAnimation = ({ onAnimationComplete }: SplashAnimationProps) => {
     >
       <Box
         sx={{
-          color: '#E50914',
-          fontFamily: 'Arial, sans-serif',
+          color: '#0D47A1',
+          fontFamily: 'Montserrat, Arial, sans-serif',
           fontWeight: 'bold',
           fontSize: { xs: '3rem', sm: '4rem', md: '6rem' },
           letterSpacing: '4px',
@@ -96,12 +96,12 @@ const SplashAnimation = ({ onAnimationComplete }: SplashAnimationProps) => {
           textAlign: 'center',
         }}
       >
-        {siteName || 'VIDEOSPLUS'}
+        {siteName || 'NEW STUFF'}
         <Box
           sx={{
             width: '100%',
             height: '8px',
-            backgroundColor: '#E50914',
+            backgroundColor: '#0D47A1',
             marginTop: '15px',
           }}
         />

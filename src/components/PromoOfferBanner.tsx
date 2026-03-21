@@ -2,9 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
+import Grid from '@mui/material/Grid';
+import Divider from '@mui/material/Divider';
+import CheckIcon from '@mui/icons-material/CheckCircleOutline';
 import TelegramIcon from '@mui/icons-material/Telegram';
 import { useSiteConfig } from '../context/SiteConfigContext';
 import { StripeService } from '../services/StripeService';
+import { WhoService } from '../services/WhoService';
 
 interface PromoOfferBannerProps {
   telegramLink?: string; // full URL override
@@ -20,7 +24,8 @@ const getRandomInt = (min: number, max: number) => {
 
 const PromoOfferBanner = ({ telegramLink, telegramUsername, prefilledMessage }: PromoOfferBannerProps) => {
   const [isStripeLoading, setIsStripeLoading] = useState(false);
-  const { stripePublishableKey } = useSiteConfig();
+  const [isWhopLoading, setIsWhopLoading] = useState(false);
+  const { stripePublishableKey, whoApiKey, loading: configLoading } = useSiteConfig();
 
   const interestMessage = prefilledMessage || "Hi! I'm interested in the $100 offer including all content. Could you guide me on how to pay?";
   const computedTelegramHref = (() => {
@@ -38,13 +43,8 @@ const PromoOfferBanner = ({ telegramLink, telegramUsername, prefilledMessage }: 
     }
   })();
 
-  // Handle Stripe payment for $135 offer
+  // Handle Stripe payment for $100 offer
   const handleStripePayment = async () => {
-    if (!stripePublishableKey) {
-      alert('Stripe configuration is missing. Please contact support.');
-      return;
-    }
-    
     try {
       setIsStripeLoading(true);
       
@@ -60,12 +60,12 @@ const PromoOfferBanner = ({ telegramLink, telegramUsername, prefilledMessage }: 
       ];
       const randomProductName = productNames[Math.floor(Math.random() * productNames.length)];
       
-      // Build success and cancel URLs
-      const successUrl = `${window.location.origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&payment_method=stripe&offer_type=all_content&price=85`;
-      const cancelUrl = `${window.location.origin}/?payment_canceled=true`;
+      // Build success and cancel URLs (usando HashRouter)
+      const successUrl = `${window.location.origin}/#/payment-success?session_id={CHECKOUT_SESSION_ID}&payment_method=stripe&offer_type=all_content&price=100`;
+      const cancelUrl = `${window.location.origin}/#/?payment_canceled=true`;
       
       // Create checkout session
-      const sessionId = await StripeService.createCheckoutSession(
+      const checkout = await StripeService.createCheckoutSession(
         100, // $100 price
         'usd',
         randomProductName,
@@ -74,7 +74,7 @@ const PromoOfferBanner = ({ telegramLink, telegramUsername, prefilledMessage }: 
       );
       
       // Redirect to checkout
-      await StripeService.redirectToCheckout(sessionId);
+      await StripeService.redirectToCheckout(checkout.checkoutUrl);
       
     } catch (error) {
       console.error('Error processing Stripe payment:', error);
@@ -84,184 +84,232 @@ const PromoOfferBanner = ({ telegramLink, telegramUsername, prefilledMessage }: 
     }
   };
 
+  // Handle Whop payment for $100 offer
+  const handleWhopPayment = async () => {
+    if (!whoApiKey) {
+      alert('Whop configuration is missing. Please contact support.');
+      return;
+    }
+    
+    try {
+      setIsWhopLoading(true);
+      
+      // Initialize WhoService with API key
+      WhoService.initWho(whoApiKey);
+      
+      // Generate a random product name for privacy
+      const productNames = [
+        "Premium Content Package",
+        "Digital Media Collection",
+        "Exclusive Content Bundle",
+        "Premium Access Package"
+      ];
+      const randomProductName = productNames[Math.floor(Math.random() * productNames.length)];
+      
+      // Build success and cancel URLs (usando HashRouter)
+      // Nota: session_id será gerado automaticamente na página de sucesso
+      const successUrl = `${window.location.origin}/#/payment-success?payment_method=who&offer_type=all_content&price=100`;
+      const cancelUrl = `${window.location.origin}/#/?payment_canceled=true`;
+      
+      // Create checkout session
+      const checkoutUrl = await WhoService.createCheckoutSession(
+        100, // $100 price
+        'usd',
+        randomProductName,
+        successUrl,
+        cancelUrl
+      );
+      
+      // Redirect to checkout
+      await WhoService.redirectToCheckout(checkoutUrl);
+      
+    } catch (error) {
+      console.error('Error processing Whop payment:', error);
+      alert('Failed to initialize payment. Please try again.');
+    } finally {
+      setIsWhopLoading(false);
+    }
+  };
+
   return (
-    <Box sx={{ width: '100%', mb: 3, px: { xs: 2, sm: 3 } }}>
+    <Box sx={{ width: '100%', mb: 2, position: 'relative' }}>
+      {/* Animação CSS para seta pulsante */}
+      <style>
+        {`
+          @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+          }
+          @keyframes fadeInOut {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+          }
+        `}
+      </style>
+
       <Box
         sx={{
           position: 'relative',
-          maxWidth: 800,
+          maxWidth: 1200,
           mx: 'auto',
-          borderRadius: 4,
-          p: { xs: 2.5, sm: 3.5 },
-          color: 'white',
-          background: 'linear-gradient(135deg, #FF0F50, #D10D42, #FF3871, #FF6B9D)',
-          backgroundSize: '300% 300%',
-          animation: 'gradientMove 8s ease infinite, shimmer 3s ease-in-out infinite',
-          boxShadow: '0 8px 32px rgba(255, 15, 80, 0.3), 0 0 0 1px rgba(255,255,255,0.1)',
-          overflow: 'hidden',
-          border: '2px solid rgba(255,255,255,0.2)',
+          borderRadius: { xs: 0, sm: 2 },
+          p: { xs: 2, sm: 2.5 },
+          background: theme => theme.palette.mode === 'dark' 
+            ? 'linear-gradient(135deg, rgba(3,9,37,0.96) 0%, rgba(2,6,23,0.99) 100%)'
+            : 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(245,245,250,0.98) 100%)',
           backdropFilter: 'blur(10px)',
-          transform: 'perspective(1000px) rotateX(2deg)',
-          transition: 'all 0.3s ease',
-          '&:hover': {
-            transform: 'perspective(1000px) rotateX(0deg) scale(1.02)',
-            boxShadow: '0 12px 48px rgba(255, 15, 80, 0.4), 0 0 0 2px rgba(255,255,255,0.3)'
-          },
-          '@keyframes gradientMove': {
-            '0%': { backgroundPosition: '0% 50%' },
-            '50%': { backgroundPosition: '100% 50%' },
-            '100%': { backgroundPosition: '0% 50%' }
-          },
-          '@keyframes shimmer': {
-            '0%': { boxShadow: '0 8px 32px rgba(255, 15, 80, 0.3)' },
-            '50%': { boxShadow: '0 8px 32px rgba(255, 15, 80, 0.5), 0 0 20px rgba(255, 255, 255, 0.3)' },
-            '100%': { boxShadow: '0 8px 32px rgba(255, 15, 80, 0.3)' }
-          }
+          border: theme => `1px solid ${theme.palette.divider}`,
+          boxShadow: theme => theme.palette.mode === 'dark' 
+            ? '0 4px 16px rgba(0,0,0,0.3)'
+            : '0 4px 16px rgba(0,0,0,0.08)'
+        }}
+      >
+        <Grid container spacing={2} alignItems="center">
+          {/* Conteúdo Principal - Mais compacto */}
+          <Grid item xs={12} md={8}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+              <Box sx={{ flex: 1, minWidth: 200 }}>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 800,
+                    mb: 0.5,
+                    fontSize: { xs: '1.25rem', sm: '1.5rem' },
+                    background: theme => theme.palette.mode === 'dark'
+                      ? 'linear-gradient(90deg, #fff 0%, #aaa 100%)'
+                      : 'linear-gradient(90deg, #000 0%, #555 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}
+                >
+                  🎉 Special Offer - All Content $100
+                </Typography>
+
+                <Typography sx={{ fontSize: '0.85rem', color: theme => theme.palette.text.secondary, mb: 1.5 }}>
+                  Complete collection • Instant delivery • Secure payment
+                </Typography>
+
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  <Button
+                    href={computedTelegramHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    startIcon={<TelegramIcon />}
+                    variant="outlined"
+                    size="small"
+                    sx={{
+                      fontWeight: 600,
+                      px: 2,
+                      py: 0.75,
+                      borderRadius: 1.5,
+                      fontSize: '0.85rem',
+                    }}
+                  >
+                    Telegram
+                  </Button>
+                  
+                  {/* Stripe Payment Button - Only show if configured */}
+                  {!configLoading && (
+                    <Button
+                      variant="contained"
+                      onClick={handleStripePayment}
+                      disabled={isStripeLoading}
+                      color="primary"
+                      size="small"
+                      sx={{
+                        fontWeight: 700,
+                        px: 2.5,
+                        py: 0.75,
+                        borderRadius: 1.5,
+                        fontSize: '0.85rem',
+                        boxShadow: 3,
+                      }}
+                    >
+                      {isStripeLoading ? 'Processing...' : 'PAY'}
+                    </Button>
+                  )}
+                  
+                  {/* Whop Payment Button - Only show if configured */}
+                  {!configLoading && whoApiKey && whoApiKey.trim() !== '' && (
+                    <Button
+                      variant="contained"
+                      onClick={handleWhopPayment}
+                      disabled={isWhopLoading}
+                      color="primary"
+                      size="small"
+                      sx={{
+                        fontWeight: 700,
+                        px: 2.5,
+                        py: 0.75,
+                        borderRadius: 1.5,
+                        fontSize: '0.85rem',
+                        boxShadow: 3,
+                      }}
+                    >
+                      {isWhopLoading ? 'Processing...' : 'PAY'}
+                    </Button>
+                  )}
+                </Box>
+              </Box>
+            </Box>
+          </Grid>
+
+          {/* Benefits - Mais compacto */}
+          <Grid item xs={12} md={4}>
+            <Box sx={{
+              border: theme => `1px solid ${theme.palette.divider}`,
+              borderRadius: 1.5,
+              p: 1.5,
+              backgroundColor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'
+            }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CheckIcon fontSize="small" color="primary" sx={{ fontSize: '1rem' }} />
+                  <Typography variant="caption" sx={{ fontWeight: 500 }}>Full access</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CheckIcon fontSize="small" color="primary" sx={{ fontSize: '1rem' }} />
+                  <Typography variant="caption" sx={{ fontWeight: 500 }}>Auto delivery</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CheckIcon fontSize="small" color="primary" sx={{ fontSize: '1rem' }} />
+                  <Typography variant="caption" sx={{ fontWeight: 500 }}>One-time payment</Typography>
+                </Box>
+              </Box>
+            </Box>
+          </Grid>
+        </Grid>
+      </Box>
+
+      {/* Seta animada indicando mais conteúdo abaixo */}
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          mt: 1,
+          mb: -1,
         }}
       >
         <Box
           sx={{
-            position: 'absolute',
-            right: -40,
-            top: -40,
-            width: 120,
-            height: 120,
-            borderRadius: '50%',
-            background: 'rgba(255,255,255,0.1)',
-            animation: 'float 6s ease-in-out infinite'
+            animation: 'bounce 2s ease-in-out infinite',
+            color: theme => theme.palette.primary.main,
+            fontSize: '2rem',
+            opacity: 0.6,
+            cursor: 'pointer',
+            '&:hover': {
+              opacity: 1,
+            },
           }}
-        />
-        
-        <Box
-          sx={{
-            position: 'absolute',
-            left: -30,
-            bottom: -30,
-            width: 80,
-            height: 80,
-            borderRadius: '50%',
-            background: 'rgba(255,255,255,0.08)',
-            animation: 'float 8s ease-in-out infinite reverse'
-          }}
-        />
-
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: 800,
-            textAlign: 'center',
-            textShadow: '2px 2px 8px rgba(0,0,0,0.4)',
-            mb: 1,
-            fontSize: { xs: '1.4rem', sm: '1.8rem', md: '2.2rem' },
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 1,
-            animation: 'bounce 2s ease-in-out infinite'
+          onClick={() => {
+            window.scrollTo({
+              top: window.scrollY + 300,
+              behavior: 'smooth'
+            });
           }}
         >
-          🎉 SPECIAL OFFER 🎉
-        </Typography>
-
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 800,
-            textAlign: 'center',
-            mb: 2,
-            fontSize: { xs: '1.1rem', sm: '1.4rem', md: '1.6rem' },
-            textShadow: '1px 1px 4px rgba(0,0,0,0.3)'
-          }}
-        >
-          ALL CONTENT FOR ONLY $100
-        </Typography>
-
-        <Typography sx={{ textAlign: 'center', opacity: 0.95, mb: 2.5, fontSize: '0.95rem' }}>
-          Get access to our entire premium collection at an unbeatable price!
-        </Typography>
-
-        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2.5 }}>
-          <Typography
-            sx={{
-              textAlign: 'center',
-              fontWeight: 700,
-              background: 'rgba(255, 193, 7, 0.25)',
-              color: '#FFC107',
-              display: 'inline-block',
-              px: 2,
-              py: 0.8,
-              borderRadius: 2,
-              border: '1px solid rgba(255, 193, 7, 0.5)',
-              fontSize: '0.9rem',
-              animation: 'glow 2s ease-in-out infinite alternate'
-            }}
-          >
-            📦 EVERYTHING YOU SEE ON THIS SITE INCLUDED! 📦
-          </Typography>
+          ↓
         </Box>
-
-        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 2.5, flexWrap: 'wrap' }}>
-          <Button
-            href={computedTelegramHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            startIcon={<TelegramIcon />}
-            variant="contained"
-            sx={{
-              bgcolor: '#1E90FF',
-              color: 'white',
-              fontWeight: 800,
-              px: 2.5,
-              py: 1,
-              borderRadius: 999,
-              boxShadow: '0 4px 15px rgba(30,144,255,0.4)',
-              transition: 'all 0.3s ease',
-              animation: 'pulseButton 3s ease-in-out infinite',
-              '&:hover': { 
-                bgcolor: '#187bcd', 
-                transform: 'translateY(-2px) scale(1.05)', 
-                boxShadow: '0 8px 25px rgba(30,144,255,0.6)' 
-              }
-            }}
-          >
-            Come to Negociate
-          </Button>
-          
-          <Button
-            variant="contained"
-            onClick={handleStripePayment}
-            disabled={isStripeLoading || !stripePublishableKey}
-            sx={{
-              bgcolor: '#635bff',
-              color: 'white',
-              fontWeight: 800,
-              px: 2.5,
-              py: 1,
-              borderRadius: 999,
-              boxShadow: '0 4px 15px rgba(99, 91, 255, 0.4)',
-              transition: 'all 0.3s ease',
-              animation: 'pulseButton 3s ease-in-out infinite 1.5s',
-              '&:hover': { 
-                bgcolor: '#4b45c6', 
-                transform: 'translateY(-2px) scale(1.05)', 
-                boxShadow: '0 8px 25px rgba(99, 91, 255, 0.6)' 
-              }
-            }}
-          >
-            {isStripeLoading ? 'Processing...' : 'Pay $100'}
-          </Button>
-        </Box>
-
-        <Typography sx={{ textAlign: 'center', fontSize: '0.85rem', opacity: 0.8, mb: 2.5 }}>
-          ⚡ Instant delivery after payment ⚡
-        </Typography>
-
-        <Box sx={{ 
-          '@keyframes float': { '0%, 100%': { transform: 'translateY(0px)' }, '50%': { transform: 'translateY(-10px)' } },
-          '@keyframes bounce': { '0%, 100%': { transform: 'translateY(0px)' }, '50%': { transform: 'translateY(-5px)' } },
-          '@keyframes glow': { '0%': { boxShadow: '0 0 5px rgba(255, 193, 7, 0.5)' }, '100%': { boxShadow: '0 0 20px rgba(255, 193, 7, 0.8)' } },
-          '@keyframes pulseButton': { '0%, 100%': { transform: 'scale(1)' }, '50%': { transform: 'scale(1.05)' } }
-        }} />
       </Box>
     </Box>
   );

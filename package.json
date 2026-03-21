@@ -13,7 +13,8 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "start": "NODE_ENV=production node server.js",
-    "test-server": "node test-server.js"
+    "test-server": "node test-server.js",
+    "test-whop-matching": "node test-whop-matching.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.891.0",
@@ -32,6 +33,7 @@
     "@types/crypto-js": "^4.2.2",
     "@vercel/analytics": "^1.5.0",
     "@videojs/themes": "^1.0.1",
+    "@whop/sdk": "^0.0.20",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
     "crypto-js": "^4.2.0",

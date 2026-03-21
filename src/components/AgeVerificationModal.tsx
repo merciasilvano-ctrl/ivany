@@ -34,7 +34,7 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({ open, onCon
       PaperProps={{
         sx: {
           borderRadius: 4,
-          background: 'linear-gradient(135deg, #d32f2f 0%, #b71c1c 50%, #8b0000 100%)',
+          background: theme => `linear-gradient(135deg, ${theme.palette.primary.main} 0%, #1565C0 50%, #0D47A1 100%)`,
           color: 'white',
           position: 'relative',
           overflow: 'hidden',
@@ -157,7 +157,7 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({ open, onCon
               startIcon={<CancelIcon />}
               onClick={onReject}
               sx={{
-                background: 'linear-gradient(45deg, #f44336 30%, #d32f2f 90%)',
+                background: theme => `linear-gradient(45deg, ${theme.palette.primary.main} 30%, #1565C0 90%)`,
                 color: 'white',
                 fontWeight: 'bold',
                 fontSize: isMobile ? '0.9rem' : '1.1rem',
